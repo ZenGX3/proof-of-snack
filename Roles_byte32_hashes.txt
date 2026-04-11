@@ -1,0 +1,14 @@
+const DEFAULT_ADMIN_ROLE = "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+const MINTER_ROLE  = "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6";
+const BURNER_ROLE  = "0x3c11d9a9d4c0b6e8b3e5f7a9c1d2e3f4a5b6c7d8e9f001122334455667788990";
+const PAUSER_ROLE  = "0x65d7a28e3265b2c2c5b3b5c9d3f4e6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3";
+
+
+//sample roles
+
+//const FARMER_ROLE      = ethers.keccak256(ethers.toUtf8Bytes("FARMER_ROLE"));
+//const PROCESSOR_ROLE   = ethers.keccak256(ethers.toUtf8Bytes("PROCESSOR_ROLE"));
+//const DISTRIBUTOR_ROLE = ethers.keccak256(ethers.toUtf8Bytes("DISTRIBUTOR_ROLE"));
+//const RETAILER_ROLE    = ethers.keccak256(ethers.toUtf8Bytes("RETAILER_ROLE"));
+//const CERTIFIER_ROLE   = ethers.keccak256(ethers.toUtf8Bytes("CERTIFIER_ROLE"));

@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proof Of Snack — Blockchain Supply Chain</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root {
+  --green-400:#4ade80;--green-600:#16a34a;--green-700:#15803d;
+  --slate-800:#1e293b;--slate-900:#0f172a;--amber-600:#d97706;
+  --font:'Space Grotesk',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --radius:10px;--radius-lg:16px;--radius-xl:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--slate-900);color:#fff;min-height:100vh;overflow-x:hidden}
+
+/* Header */
+header{background:var(--slate-900);border-bottom:1px solid rgba(255,255,255,.07);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:#fff}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#16a34a,#4ade80);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo span{color:var(--green-400)}
+.nav-tabs{display:flex;gap:4px;background:rgba(255,255,255,.06);padding:4px;border-radius:10px}
+.nav-tab{padding:4px 16px;border-radius:7px;border:none;font:500 13px var(--font);cursor:pointer;color:rgba(255,255,255,.55);background:transparent;transition:all .18s}
+.nav-tab.active{background:var(--green-600);color:#fff}
+.nav-tab:hover:not(.active){background:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
+.header-right{display:flex;align-items:center;gap:12px}
+.chain-badge{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);color:var(--green-400);font:500 12px var(--mono);padding:4px 12px;border-radius:20px;display:flex;align-items:center;gap:6px}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Layout */
+.main{display:flex;height:calc(100vh - 64px)}
+.sidebar{width:280px;flex-shrink:0;background:rgba(255,255,255,.03);border-right:1px solid rgba(255,255,255,.07);overflow-y:auto;padding:1.5rem 1rem}
+.content{flex:1;overflow-y:auto;padding:2rem}
+
+/* Sidebar */
+.sidebar-section{margin-bottom:1.5rem}
+.sidebar-label{font:500 11px var(--font);color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.75rem;padding:0 8px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:all .15s;color:rgba(255,255,255,.6);font-size:14px}
+.sidebar-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
+.sidebar-item.active{background:rgba(22,163,74,.15);color:var(--green-400)}
+.sidebar-icon{font-size:16px;width:20px;text-align:center}
+.sidebar-count{margin-left:auto;font:500 11px var(--mono);background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);padding:1px 7px;border-radius:10px}
+.sidebar-item.active .sidebar-count{background:rgba(22,163,74,.25);color:var(--green-400)}
+
+/* Pages */
+.page{display:none}
+.page.active{display:block}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:2rem}
+.stat-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-lg);padding:1.25rem}
+.stat-label{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.stat-value{font:700 28px var(--font);color:#fff;margin-bottom:4px}
+.stat-change{font-size:12px;color:var(--green-400)}
+
+/* Section header */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.section-title{font:600 18px var(--font);color:#fff}
+
+/* Buttons */
+.btn{padding:8px 18px;border-radius:8px;border:none;font:600 13px var(--font);cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--green-600);color:#fff}
+.btn-primary:hover{background:var(--green-700)}
+.btn-ghost{background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.12)}
+.btn-ghost:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn-sm{padding:5px 12px;font-size:12px}
+
+/* Cards */
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:16px}
+
+/* Table */
+.table-wrap{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem}
+table{width:100%;border-collapse:collapse}
+th{background:rgba(255,255,255,.04);font:500 12px var(--font);color:rgba(255,255,255,.4);text-align:left;padding:12px 16px;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06)}
+td{padding:14px 16px;font-size:14px;color:rgba(255,255,255,.8);border-bottom:1px solid rgba(255,255,255,.04)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font:500 12px var(--font)}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge-green{background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.25)}
+.badge-amber{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.25)}
+.badge-red{background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.25)}
+.badge-blue{background:rgba(96,165,250,.12);color:#60a5fa;border:1px solid rgba(96,165,250,.25)}
+.badge-purple{background:rgba(192,132,252,.12);color:#c084fc;border:1px solid rgba(192,132,252,.25)}
+
+/* Hash */
+.hash{font:400 12px var(--mono);color:rgba(74,222,128,.7);background:rgba(74,222,128,.06);padding:2px 8px;border-radius:4px}
+
+/* Forms */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+label{font:500 13px var(--font);color:rgba(255,255,255,.5)}
+input,select,textarea{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;padding:10px 14px;border-radius:8px;font:400 14px var(--font);outline:none;transition:border .15s;width:100%}
+input::placeholder,textarea::placeholder{color:rgba(255,255,255,.25)}
+input:focus,select:focus,textarea:focus{border-color:var(--green-600)}
+select option{background:var(--slate-800)}
+textarea{resize:vertical;min-height:80px}
+
+/* Chain viz */
+.chain-viz{display:flex;align-items:center;gap:0;margin-bottom:2rem;overflow-x:auto;padding-bottom:8px}
+.block-mini{flex-shrink:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;min-width:150px;cursor:pointer;transition:all .2s}
+.block-mini:hover{border-color:var(--green-600);background:rgba(22,163,74,.08)}
+.block-mini.genesis{border-color:var(--green-600);background:rgba(22,163,74,.1)}
+.block-num{font:500 10px var(--mono);color:rgba(255,255,255,.3);margin-bottom:4px}
+.block-hash-mini{font:400 10px var(--mono);color:var(--green-400);opacity:.7}
+.block-tx{font-size:11px;color:rgba(255,255,255,.4);margin-top:4px}
+.chain-arrow{flex-shrink:0;color:rgba(255,255,255,.2);font-size:18px;padding:0 4px;line-height:1}
+
+/* Timeline */
+.timeline{position:relative;padding-left:32px}
+.timeline::before{content:'';position:absolute;left:11px;top:0;bottom:0;width:2px;background:rgba(255,255,255,.08)}
+.timeline-item{position:relative;margin-bottom:1.5rem}
+.timeline-dot{position:absolute;left:-32px;top:4px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid var(--slate-900)}
+.timeline-dot.done{background:var(--green-600)}
+.timeline-dot.current{background:var(--amber-600);animation:pulse-dot 1.5s infinite}
+.timeline-dot.pending{background:rgba(255,255,255,.15)}
+.timeline-title{font:600 14px var(--font);color:rgba(255,255,255,.9);margin-bottom:4px}
+.timeline-meta{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:6px}
+.timeline-data{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 14px;font:400 12px var(--mono);color:rgba(255,255,255,.6)}
+
+/* Notification */
+#notification{position:fixed;bottom:24px;right:24px;background:var(--green-700);color:#fff;padding:12px 20px;border-radius:10px;font:500 14px var(--font);z-index:9999;transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none;max-width:360px;border-left:3px solid var(--green-400);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+#notification.show{transform:translateY(0);opacity:1}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--slate-800);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-xl);padding:2rem;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;transform:scale(.95);transition:transform .2s}
+.modal-overlay.open .modal{transform:scale(1)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.modal-title{font:700 18px var(--font);color:#fff}
+.modal-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;padding:4px 8px}
+.modal-close:hover{color:#fff}
+
+/* Misc */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+.qr-box{width:100px;height:100px;border:2px solid rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qr-inner{display:grid;grid-template-columns:repeat(7,1fr);gap:1.5px;padding:8px}
+.qr-px{width:8px;height:8px;border-radius:1px}
+.empty-state{text-align:center;padding:3rem;color:rgba(255,255,255,.3);font-size:14px}
+.empty-state .empty-icon{font-size:40px;margin-bottom:12px}
+.cert-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.cert-icon{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.cert-name{font:600 14px var(--font);color:rgba(255,255,255,.9);margin-bottom:3px}
+.cert-meta{font-size:12px;color:rgba(255,255,255,.4)}
+.cert-actions{margin-left:auto}
+.info-row{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start}
+.info-key{font:500 12px var(--font);color:rgba(255,255,255,.4);min-width:130px;flex-shrink:0;padding-top:1px}
+.info-val{font-size:13px;color:rgba(255,255,255,.8);word-break:break-all}
+.step-num{width:32px;height:32px;border-radius:50%;background:var(--green-600);color:#fff;display:flex;align-items:center;justify-content:center;font:700 15px var(--font);flex-shrink:0}
+@media(max-width:900px){.stats-grid{grid-template-columns:1fr 1fr}.sidebar{width:240px}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌿</div>
+    Proof Of <span>Snack</span>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showPage('register')">Register Product</button>
+    <button class="nav-tab" onclick="showPage('trace')">Trace &amp; Track</button>
+    <button class="nav-tab" onclick="showPage('compliance')">Compliance</button>
+    <button class="nav-tab" onclick="showPage('ledger')">Ledger</button>
+    <button class="nav-tab" onclick="showPage('setup')">⚙ Setup</button>
+  </nav>
+  <div class="header-right">
+    <div class="chain-badge" id="block-counter">
+      <span id="conn-dot" style="width:6px;height:6px;border-radius:50%;background:#f87171;flex-shrink:0;animation:pulse-dot 2s infinite"></span>
+      <span id="conn-label">Disconnected</span> · Block #<span id="current-block">—</span>
+    </div>
+    <button class="btn btn-primary btn-sm" id="connect-btn" onclick="saveAndConnect()" style="font-size:12px">Connect Ganache</button>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Supply Chain</div>
+      <div class="sidebar-item active" onclick="filterProducts('all',this)">
+        <span class="sidebar-icon">📦</span> All Products
+        <span class="sidebar-count" id="cnt-all">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterProducts('farm',this)">
+        <span class="sidebar-icon">🌾</span> Farm
+        <span class="sidebar-count" id="cnt-farm">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterProducts('processing',this)">
+        <span class="sidebar-icon">🏭</span> Processing
+        <span class="sidebar-count" id="cnt-processing">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterProducts('distribution',this)">
+        <span class="sidebar-icon">🚛</span> Distribution
+        <span class="sidebar-count" id="cnt-distribution">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterProducts('retail',this)">
+        <span class="sidebar-icon">🏪</span> Retail
+        <span class="sidebar-count" id="cnt-retail">0</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Alerts</div>
+      <div class="sidebar-item" id="alert-contamination" style="display:none">
+        <span class="sidebar-icon">⚠️</span> Contamination Alert
+        <span class="sidebar-count" style="background:rgba(248,113,113,.2);color:#f87171">!</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="sidebar-icon">✅</span> Verified Items
+        <span class="sidebar-count" id="cnt-verified">0</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="sidebar-icon">📋</span> Pending Certs
+        <span class="sidebar-count" id="cnt-pending">0</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Participants</div>
+      <div style="padding:8px;font-size:12px;color:rgba(255,255,255,.3);line-height:1.8">
+        <div>🌱 GreenValley Farms</div>
+        <div>🏭 FreshPro Processing</div>
+        <div>🚛 SwiftLogistics Ltd</div>
+        <div>🏪 CityMart Retail</div>
+        <div>🔬 SafeFood Labs</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Products</div>
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-change">on blockchain</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Blocks Mined</div>
+          <div class="stat-value" id="stat-blocks">—</div>
+          <div class="stat-change">Ganache local</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Verified</div>
+          <div class="stat-value" id="stat-verified">0</div>
+          <div class="stat-change">✓ compliant</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Transactions</div>
+          <div class="stat-value" id="stat-txns">0</div>
+          <div class="stat-change">all time</div>
+        </div>
+      </div>
+      <div class="section-header">
+        <div class="section-title">🔗 Live Blockchain</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.3)">Click any block to inspect</div>
+      </div>
+      <div class="chain-viz" id="chain-viz">
+        <div style="color:rgba(255,255,255,.25);font-size:13px;padding:1rem">Connect to Ganache to see live blocks →</div>
+      </div>
+      <div class="section-header">
+        <div class="section-title">Recent Transactions</div>
+        <button class="btn btn-ghost btn-sm" onclick="showPage('ledger')">View All →</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tx Hash</th><th>Product</th><th>Action</th><th>Actor</th><th>Stage</th><th>Time</th></tr></thead>
+          <tbody id="recent-txns">
+            <tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,.25);padding:2rem">No transactions yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="page" id="page-register">
+      <div class="section-header"><div class="section-title">Register New Product on Blockchain</div></div>
+      <div class="card" style="background:rgba(22,163,74,.06);border-color:rgba(22,163,74,.2)">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="font-size:20px;flex-shrink:0">🔐</div>
+          <div>
+            <div style="font:600 14px var(--font);color:rgba(255,255,255,.9);margin-bottom:4px">Smart Contract: FoodToken.sol</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.45);line-height:1.6">Registering a product mints a unique token on Ganache with a tamper-proof record of all product metadata. Every update creates an immutable audit trail.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:1.25rem;font-size:15px">Product Information</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Product Name *</label><input type="text" id="reg-name" placeholder="e.g. Organic Alphonso Mangoes" /></div>
+          <div class="form-group"><label>Category</label><select id="reg-category"><option>Fresh Produce</option><option>Dairy</option><option>Meat &amp; Poultry</option><option>Grains &amp; Cereals</option><option>Seafood</option><option>Processed Food</option><option>Beverages</option></select></div>
+          <div class="form-group"><label>Origin Farm / Producer</label><input type="text" id="reg-origin" placeholder="e.g. GreenValley Farms, Nashik" /></div>
+          <div class="form-group"><label>Batch Size (kg)</label><input type="number" id="reg-quantity" placeholder="500" /></div>
+          <div class="form-group"><label>Harvest Date *</label><input type="date" id="reg-date" /></div>
+          <div class="form-group"><label>Expiry Date</label><input type="date" id="reg-expiry" /></div>
+          <div class="form-group full"><label>Additional Notes</label><textarea id="reg-notes" placeholder="Certifications, growing method, handling instructions..."></textarea></div>
+        </div>
+        <button class="btn btn-primary" onclick="registerProduct()" style="width:100%;padding:12px">⛏ Register &amp; Mint Token on Blockchain</button>
+      </div>
+      <div class="card" id="reg-result" style="display:none;border-color:rgba(74,222,128,.3)">
+        <div style="font:700 15px var(--font);color:var(--green-400);margin-bottom:1rem">✅ Product Registered Successfully!</div>
+        <div id="reg-result-content"></div>
+      </div>
+    </div>
+
+    <!-- TRACE -->
+    <div class="page" id="page-trace">
+      <div class="section-header"><div class="section-title">Trace &amp; Track Products</div></div>
+      <div style="display:flex;gap:12px;margin-bottom:1.5rem">
+        <input type="text" id="trace-search" placeholder="Search by Product ID, name, or batch…" style="flex:1" oninput="traceSearch(this.value)" />
+        <button class="btn btn-ghost" onclick="traceSearch(document.getElementById('trace-search').value)">Search</button>
+      </div>
+      <div id="trace-product-list"></div>
+      <div id="trace-journey" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem">
+          <button class="btn btn-ghost btn-sm" onclick="closeJourney()">← Back</button>
+          <div class="section-title" id="journey-title">Journey</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1.5rem">
+          <div class="card" id="journey-product-info"></div>
+          <div class="card" id="journey-qr"></div>
+        </div>
+        <div class="section-header"><div class="section-title" style="font-size:15px">📍 Supply Chain Journey</div></div>
+        <div class="card" id="journey-timeline"></div>
+        <div class="section-header" style="margin-top:1rem"><div class="section-title" style="font-size:15px">➕ Add Checkpoint</div></div>
+        <div class="card">
+          <div class="form-grid">
+            <div class="form-group"><label>Stage</label><select id="chk-stage"><option value="0">🌾 Farm</option><option value="1">🏭 Processing</option><option value="2">🚛 Distribution</option><option value="3">🏪 Retail</option></select></div>
+            <div class="form-group"><label>Location</label><input type="text" id="chk-location" placeholder="e.g. Pune Cold Storage" /></div>
+            <div class="form-group"><label>Temperature (°C)</label><input type="number" id="chk-temp" placeholder="4" /></div>
+            <div class="form-group"><label>Handler / Actor</label><input type="text" id="chk-handler" placeholder="e.g. SwiftLogistics Ltd" /></div>
+            <div class="form-group full"><label>Notes</label><input type="text" id="chk-notes" placeholder="Quality check passed, sample taken…" /></div>
+          </div>
+          <button class="btn btn-primary" onclick="addCheckpoint()" style="width:100%;padding:10px">⛏ Record Checkpoint on Blockchain</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLIANCE -->
+    <div class="page" id="page-compliance">
+      <div class="section-header">
+        <div class="section-title">Compliance &amp; Certifications</div>
+        <button class="btn btn-primary btn-sm" onclick="openCertModal()">+ Add Certificate</button>
+      </div>
+      <div class="card" style="background:rgba(96,165,250,.05);border-color:rgba(96,165,250,.2);margin-bottom:1.5rem">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="font-size:20px">📜</div>
+          <div>
+            <div style="font:600 14px var(--font);color:rgba(255,255,255,.9);margin-bottom:4px">Smart Contract: ComplianceRegistry.sol</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.45);line-height:1.6">All certificates and approvals are stored as immutable records on-chain. Third-party verifiers can validate authenticity without trusting any single party.</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.5rem">
+        <div class="stat-card" style="padding:1rem"><div class="stat-label">FSSAI</div><div style="font:700 20px var(--font)" id="comp-fssai">—</div><div style="font-size:11px;color:rgba(255,255,255,.3)">Food Safety Standard</div></div>
+        <div class="stat-card" style="padding:1rem"><div class="stat-label">ISO 22000</div><div style="font:700 20px var(--font)" id="comp-iso">—</div><div style="font-size:11px;color:rgba(255,255,255,.3)">Food Safety Mgmt</div></div>
+        <div class="stat-card" style="padding:1rem"><div class="stat-label">Total Certs</div><div style="font:700 20px var(--font);color:#fff" id="comp-total">0</div><div style="font-size:11px;color:rgba(255,255,255,.3)">on-chain records</div></div>
+      </div>
+      <div id="cert-list"><div class="empty-state"><div class="empty-icon">📋</div>No certificates yet.</div></div>
+    </div>
+
+    <!-- LEDGER -->
+    <div class="page" id="page-ledger">
+      <div class="section-header">
+        <div class="section-title">Immutable Blockchain Ledger</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.3)">All transactions · tamper-proof</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Block</th><th>Tx Hash</th><th>From</th><th>Action</th><th>Product</th><th>Timestamp</th><th>Status</th></tr></thead>
+          <tbody id="ledger-body">
+            <tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.25);padding:2rem">No transactions yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETUP -->
+    <div class="page" id="page-setup">
+      <div class="section-header"><div class="section-title">⚙ Ganache + Remix Setup</div></div>
+      <div class="card" style="border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.05);margin-bottom:1rem">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="font-size:20px;flex-shrink:0">⚠</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.8">Complete Steps 1–4 in Remix + Ganache first, then paste the three contract addresses below and click Connect.</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div class="step-num">1</div>
+          <div>
+            <div style="font:600 14px var(--font);color:#fff;margin-bottom:6px">Open Ganache GUI → New Workspace</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.8">Server: <span class="hash">http://127.0.0.1:7545</span> · Network ID: <span class="hash">5777</span><br>Click <b style="color:#fff">Start</b> — verify 10 funded accounts appear in the Accounts tab.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div class="step-num">2</div>
+          <div>
+            <div style="font:600 14px var(--font);color:#fff;margin-bottom:6px">Remix IDE — Create &amp; Compile Contracts</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.8">Go to <span class="hash">remix.ethereum.org</span> → File Explorer → New File<br>Create <span class="hash">FoodToken.sol</span>, <span class="hash">SupplyChain.sol</span>, <span class="hash">ComplianceRegistry.sol</span><br>For each: Compiler tab → Version <span class="hash">0.8.20</span> → click Compile</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div class="step-num">3</div>
+          <div>
+            <div style="font:600 14px var(--font);color:#fff;margin-bottom:6px">Deploy via Remix → External HTTP Provider</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.8">Deploy &amp; Run tab → Environment: <span class="hash">Custom - External HTTP Provider</span><br>RPC URL: <span class="hash">http://127.0.0.1:7545</span> → OK<br>Deploy <b style="color:#fff">FoodToken</b> → copy address &nbsp;|&nbsp; Deploy <b style="color:#fff">SupplyChain</b> → copy address &nbsp;|&nbsp; Deploy <b style="color:#fff">ComplianceRegistry</b> → copy address<br>Verify: Ganache Transactions tab shows 3 contract creation entries ✓</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div class="step-num">4</div>
+          <div>
+            <div style="font:600 14px var(--font);color:#fff;margin-bottom:6px">Paste Addresses &amp; Connect</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.8">Fill the fields below with the three deployed contract addresses, then click Connect.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(22,163,74,.3)">
+        <div style="font:600 15px var(--font);color:#fff;margin-bottom:1rem">📋 Paste Contract Addresses</div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
+          <div class="form-group"><label>FoodToken.sol address</label><input type="text" id="addr-foodtoken" placeholder="0x..." oninput="updateConfig()" /></div>
+          <div class="form-group"><label>SupplyChain.sol address</label><input type="text" id="addr-supplychain" placeholder="0x..." oninput="updateConfig()" /></div>
+          <div class="form-group"><label>ComplianceRegistry.sol address</label><input type="text" id="addr-compliance" placeholder="0x..." oninput="updateConfig()" /></div>
+          <div class="form-group"><label>Ganache RPC URL</label><input type="text" id="addr-rpc" value="http://127.0.0.1:7545" oninput="updateConfig()" /></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveAndConnect()" style="width:100%;padding:12px">🔌 Save &amp; Connect to Ganache</button>
+      </div>
+      <div class="card" id="accounts-card" style="display:none">
+        <div style="font:600 14px var(--font);color:#fff;margin-bottom:12px">Ganache Accounts Loaded</div>
+        <div id="accounts-list"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Block Inspector Modal -->
+<div class="modal-overlay" id="block-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔎 Block Inspector</div>
+      <button class="modal-close" onclick="closeModal('block-modal')">✕</button>
+    </div>
+    <div id="block-modal-content"></div>
+  </div>
+</div>
+
+<!-- Add Certificate Modal -->
+<div class="modal-overlay" id="cert-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📜 Add Certification</div>
+      <button class="modal-close" onclick="closeModal('cert-modal')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Certificate Name</label><input type="text" id="cert-name" placeholder="e.g. Organic India Certification" /></div>
+      <div class="form-group"><label>Issuing Authority</label><input type="text" id="cert-authority" placeholder="e.g. APEDA" /></div>
+      <div class="form-group"><label>Valid From</label><input type="date" id="cert-from" /></div>
+      <div class="form-group"><label>Valid Until</label><input type="date" id="cert-until" /></div>
+      <div class="form-group"><label>Product / Batch</label><select id="cert-product"></select></div>
+      <div class="form-group"><label>Standard</label><select id="cert-standard"><option>FSSAI</option><option>ISO 22000</option><option>HACCP</option><option>GlobalG.A.P.</option><option>Organic India</option><option>USDA Organic</option><option>Halal</option><option>Kosher</option></select></div>
+    </div>
+    <button class="btn btn-primary" onclick="addCertificate()" style="width:100%;padding:12px;margin-top:8px">⛏ Record Certificate on Blockchain</button>
+  </div>
+</div>
+
+<div id="notification"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<script>
+const CONFIG={rpcUrl:'http://127.0.0.1:7545',foodTokenAddr:'',supplyChainAddr:'',complianceAddr:''};
+const FOOD_TOKEN_ABI=["function registerProduct(address to, string name, string category, string origin, uint256 quantity, uint256 harvestDate, uint256 expiryDate, string notes) returns (uint256)","function products(uint256) view returns (string name,string category,string origin,uint256 quantity,uint256 harvestDate,uint256 expiryDate,string notes,address registeredBy,uint256 timestamp)","function totalSupply() view returns (uint256)","event ProductRegistered(uint256 indexed tokenId, string name, address registeredBy)"];
+const SUPPLY_CHAIN_ABI=["function addCheckpoint(uint256 tokenId, uint8 stage, string location, int256 temperature, string notes)","function getCheckpoints(uint256 tokenId) view returns (tuple(uint8 stage,string location,int256 temperature,address handler,string notes,uint256 recordedAt)[])","function currentStage(uint256) view returns (uint8)","event CheckpointAdded(uint256 indexed tokenId, uint8 stage, address handler, string location)","event ContaminationAlert(uint256 indexed tokenId, string reason)"];
+const COMPLIANCE_ABI=["function addCertificate(string name, string authority, string standard, uint256 tokenId, uint256 validFrom, uint256 validUntil) returns (uint256)","function certificates(uint256) view returns (string name,string authority,string standard,uint256 tokenId,uint256 validFrom,uint256 validUntil,address issuedBy,bool revoked)","function isCompliant(uint256 tokenId) view returns (bool)","function getCertCount() view returns (uint256)","event CertificateAdded(uint256 indexed certId, uint256 tokenId, string standard)"];
+
+let provider,signer,accounts=[];
+let foodToken,supplyChain,compliance,connected=false;
+let products=[],transactions=[],certs=[],blockchain=[],currentProductId=null;
+const STAGE_NAMES=['farm','processing','distribution','retail'];
+const STAGE_LABELS=['🌾 Farm','🏭 Processing','🚛 Distribution','🏪 Retail'];
+const STAGE_EMOJI=['🌾','🏭','🚛','🏪'];
+
+async function connectGanache(){
+  if(!CONFIG.foodTokenAddr){notify('⚠ Paste contract addresses in the Setup tab first','error');showPage('setup');return;}
+  try{
+    setConnectState('connecting');
+    provider=new ethers.JsonRpcProvider(CONFIG.rpcUrl);
+    await provider.getNetwork();
+    accounts=await provider.listAccounts();
+    signer=await provider.getSigner(0);
+    foodToken=new ethers.Contract(CONFIG.foodTokenAddr,FOOD_TOKEN_ABI,signer);
+    supplyChain=new ethers.Contract(CONFIG.supplyChainAddr,SUPPLY_CHAIN_ABI,signer);
+    compliance=new ethers.Contract(CONFIG.complianceAddr,COMPLIANCE_ABI,signer);
+    const code=await provider.getCode(CONFIG.foodTokenAddr);
+    if(code==='0x'){notify('❌ FoodToken not found at that address — redeploy in Remix','error');setConnectState('error');return;}
+    await syncFromChain();
+    listenToEvents();
+    connected=true;
+    setConnectState('connected');
+    notify('✅ Connected to Ganache — '+accounts.length+' accounts loaded','success');
+    document.getElementById('accounts-card').style.display='block';
+    document.getElementById('accounts-list').innerHTML=accounts.map((a,i)=>`<div class="info-row"><div class="info-key" style="min-width:80px">Account ${i}</div><div class="info-val"><span class="hash" style="font-size:11px">${a.address}</span>${i===0?'<span class="badge badge-green" style="margin-left:8px">deployer</span>':''}</div></div>`).join('');
+    setInterval(async()=>{try{const bn=await provider.getBlockNumber();document.getElementById('current-block').textContent=bn;document.getElementById('stat-blocks').textContent=bn;}catch(_){}},3000);
+  }catch(e){
+    console.error(e);setConnectState('error');
+    notify('❌ '+(e.message.includes('ECONNREFUSED')?'Ganache not running on port 7545':e.message.slice(0,100)),'error');
+  }
+}
+
+function setConnectState(s){
+  const btn=document.getElementById('connect-btn'),dot=document.getElementById('conn-dot'),lbl=document.getElementById('conn-label');
+  if(s==='connecting'){btn.textContent='Connecting…';btn.disabled=true;}
+  if(s==='connected'){btn.textContent='✓ Connected';btn.style.background='#15803d';dot.style.background='#4ade80';lbl.textContent='Ganache Live';}
+  if(s==='error'){btn.textContent='Retry Connect';btn.disabled=false;dot.style.background='#f87171';lbl.textContent='Disconnected';}
+}
+
+async function syncFromChain(){
+  products=[];certs=[];transactions=[];blockchain=[];
+  const regEvents=await foodToken.queryFilter(foodToken.filters.ProductRegistered(),0,'latest');
+  for(const ev of regEvents)await loadProduct(Number(ev.args.tokenId),ev);
+  let certCount=0;try{certCount=Number(await compliance.getCertCount());}catch(_){}
+  for(let i=0;i<certCount;i++){const c=await compliance.certificates(i);certs.push(formatCert(c,i));}
+  const latest=await provider.getBlock('latest');
+  for(let n=Math.max(0,latest.number-9);n<=latest.number;n++){const b=await provider.getBlock(n,true);if(b)blockchain.push(formatBlock(b));}
+  updateAll();
+  console.log("Loaded products:", products);
+}
+
+async function loadProduct(tokenId,regEvent){
+  try{
+    const meta=await foodToken.products(tokenId);
+    const chks=await supplyChain.getCheckpoints(tokenId);
+    const ok=await compliance.isCompliant(tokenId);
+
+    const checkpoints = chks.map(c=>({
+      stage: STAGE_NAMES[Number(c.stage)]||'farm',
+      stageNum:Number(c.stage),
+      location:c.location,
+      temp:(Number(c.temperature)/10).toFixed(1),
+      handler:c.handler,
+      notes:c.notes,
+      time:new Date(Number(c.recordedAt)*1000).toISOString(),
+      hash:regEvent?.transactionHash||'—'
+    }));
+
+    // 🔥 FIX: derive status from LAST checkpoint
+    const lastCheckpoint = checkpoints[checkpoints.length - 1];
+    const status = lastCheckpoint ? lastCheckpoint.stage : 'farm';
+
+    const p={
+      id:'FC-'+String(tokenId).padStart(6,'0'),
+      tokenId,
+      name:meta.name,
+      category:meta.category,
+      origin:meta.origin,
+      quantity:meta.quantity.toString()+' kg',
+      harvestDate:tsToDate(Number(meta.harvestDate)),
+      expiryDate:tsToDate(Number(meta.expiryDate)),
+      notes:meta.notes,
+      status, // ✅ FIXED HERE
+      verified:ok,
+      checkpoints
+    };
+
+    if(regEvent){
+      const blk=await regEvent.getBlock();
+      transactions.push({
+        block:blk.number,
+        hash:regEvent.transactionHash,
+        from:meta.registeredBy,
+        action:'REGISTER_PRODUCT',
+        product:p.id+' — '+p.name,
+        stage:'farm',
+        time:tsToTime(blk.timestamp)
+      });
+    }
+
+    const chkEvents=await supplyChain.queryFilter(supplyChain.filters.CheckpointAdded(tokenId),0,'latest');
+    for(const ev of chkEvents){
+      const blk=await ev.getBlock();
+      transactions.push({
+        block:blk.number,
+        hash:ev.transactionHash,
+        from:ev.args.handler,
+        action:'UPDATE_STAGE',
+        product:p.id+' — '+p.name,
+        stage:STAGE_NAMES[Number(ev.args.stage)],
+        time:tsToTime(blk.timestamp)
+      });
+    }
+
+    if(!products.find(x=>x.tokenId===tokenId)) products.push(p);
+
+  }catch(e){
+    console.warn('loadProduct error',tokenId,e);
+  }
+}
+
+function formatCert(c,i){return{id:i,name:c.name,authority:c.authority,standard:c.standard,product:'FC-'+String(Number(c.tokenId)).padStart(6,'0'),from:tsToDate(Number(c.validFrom)),until:tsToDate(Number(c.validUntil)),status:c.revoked?'revoked':'active',hash:c.issuedBy};}
+function formatBlock(b){return{index:b.number,hash:b.hash,prevHash:b.parentHash,timestamp:new Date(b.timestamp*1000).toISOString(),txCount:b.transactions?b.transactions.length:0,data:{type:'GANACHE_BLOCK',gasUsed:b.gasUsed?.toString()}};}
+
+function listenToEvents(){
+  foodToken.on('ProductRegistered',async(tokenId,name,registeredBy,event)=>{await loadProduct(Number(tokenId),event);const b=await event.getBlock();if(!blockchain.find(x=>x.index===b.number))blockchain.push(formatBlock(b));updateAll();notify('🌿 New product minted: '+name,'success');});
+  supplyChain.on('CheckpointAdded',async(tokenId,stage,handler,location,event)=>{const id=Number(tokenId);const chks=await supplyChain.getCheckpoints(id);const p=products.find(x=>x.tokenId===id);if(p){p.status=STAGE_NAMES[Number(stage)];p.checkpoints=chks.map(c=>({stage:STAGE_NAMES[Number(c.stage)],stageNum:Number(c.stage),location:c.location,temp:(Number(c.temperature)/10).toFixed(1),handler:c.handler,notes:c.notes,time:new Date(Number(c.recordedAt)*1000).toISOString(),hash:event.transactionHash}));if(Number(stage)===3)p.verified=true;}const b=await event.getBlock();transactions.push({block:b.number,hash:event.transactionHash,from:handler,action:'UPDATE_STAGE',product:p?p.id+' — '+p.name:id,stage:STAGE_NAMES[Number(stage)],time:tsToTime(b.timestamp)});if(!blockchain.find(x=>x.index===b.number))blockchain.push(formatBlock(b));updateAll();if(currentProductId===p?.id)openJourney(p.id);notify('📍 Checkpoint confirmed on chain!','success');});
+  supplyChain.on('ContaminationAlert',(tokenId,reason)=>{document.getElementById('alert-contamination').style.display='flex';notify('🚨 CONTAMINATION ALERT Token #'+tokenId+': '+reason,'error');});
+  compliance.on('CertificateAdded',async(certId,tokenId,standard,event)=>{const c=await compliance.certificates(Number(certId));certs.push(formatCert(c,Number(certId)));transactions.push({block:'—',hash:event.transactionHash,from:c.issuedBy,action:'ADD_CERTIFICATE',product:c.name,stage:'—',time:tsToTime(Math.floor(Date.now()/1000))});updateAll();notify('📜 Certificate recorded on-chain: '+standard,'success');});
+  provider.on('block',async(blockNumber)=>{document.getElementById('current-block').textContent=blockNumber;document.getElementById('stat-blocks').textContent=blockNumber;if(!blockchain.find(x=>x.index===blockNumber)){const b=await provider.getBlock(blockNumber);if(b){blockchain.push(formatBlock(b));renderChainViz();}}});
+}
+
+async function registerProduct(){
+  if(!connected){notify('⚠ Connect to Ganache first (Setup tab)','error');return;}
+  const name=document.getElementById('reg-name').value.trim(),category=document.getElementById('reg-category').value,origin=document.getElementById('reg-origin').value.trim()||'Unknown',quantity=document.getElementById('reg-quantity').value||'100',hDate=document.getElementById('reg-date').value,eDate=document.getElementById('reg-expiry').value,notes=document.getElementById('reg-notes').value.trim()||'None';
+  if(!name){notify('⚠ Product name is required','error');return;}if(!hDate){notify('⚠ Harvest date is required','error');return;}
+  const harvestTs=Math.floor(new Date(hDate).getTime()/1000),expiryTs=eDate?Math.floor(new Date(eDate).getTime()/1000):harvestTs+86400*365;
+  notify('⛏ Sending transaction to Ganache…','success');
+  try{
+    const tx=await foodToken.registerProduct(await signer.getAddress(),name,category,origin,parseInt(quantity),harvestTs,expiryTs,notes);
+    notify('⌛ Waiting for block confirmation…','success');
+    const receipt = await tx.wait();
+
+    await syncFromChain();
+
+    notify('✅ Product added to blockchain','success');
+    showPage('trace');
+    const iface=new ethers.Interface(FOOD_TOKEN_ABI);let tokenId=0;
+    for(const log of receipt.logs){try{const p=iface.parseLog(log);if(p?.name==='ProductRegistered')tokenId=Number(p.args.tokenId);}catch(_){}}
+    const id='FC-'+String(tokenId).padStart(6,'0');
+    document.getElementById('reg-result').style.display='block';
+    document.getElementById('reg-result-content').innerHTML=`<div class="info-row"><div class="info-key">Token ID</div><div class="info-val"><span class="hash">${id}</span></div></div><div class="info-row"><div class="info-key">Block</div><div class="info-val">#${receipt.blockNumber}</div></div><div class="info-row"><div class="info-key">Block Hash</div><div class="info-val"><span class="hash">${shortHash(receipt.blockHash)}</span></div></div><div class="info-row"><div class="info-key">Tx Hash</div><div class="info-val"><span class="hash">${shortHash(receipt.hash)}</span></div></div><div class="info-row"><div class="info-key">Gas Used</div><div class="info-val">${receipt.gasUsed.toString()}</div></div><div class="info-row"><div class="info-key">Status</div><div class="info-val"><span class="badge badge-green">✓ Confirmed</span></div></div><div style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="showPage('trace');openJourney('${id}')">View Journey →</button></div>`;
+    ['reg-name','reg-origin','reg-quantity','reg-date','reg-expiry','reg-notes'].forEach(i=>document.getElementById(i).value='');
+  }catch(e){notify('❌ Transaction failed: '+e.message.slice(0,80),'error');console.error(e);}
+}
+
+async function addCheckpoint(){
+  if(!connected){notify('⚠ Connect to Ganache first','error');return;}
+  if(!currentProductId){notify('⚠ No product selected','error');return;}
+
+  const p = products.find(x=>x.id===currentProductId),
+        stageNum = parseInt(document.getElementById('chk-stage').value),
+        location = document.getElementById('chk-location').value.trim() || 'Unknown',
+        tempRaw = parseFloat(document.getElementById('chk-temp').value) || 20,
+        notes = document.getElementById('chk-notes').value.trim() || 'Checkpoint recorded',
+        tempInt = Math.round(tempRaw);
+
+  notify('⛏ Recording checkpoint on Ganache…','success');
+
+  try{
+    const tx = await supplyChain.addCheckpoint(p.tokenId,stageNum,location,tempInt,notes);
+    const receipt = await tx.wait();
+
+    // ✅ ONLY THIS — no manual push
+    await syncFromChain();
+    updateAll();
+    if(currentProductId === p.id) openJourney(p.id);
+
+    notify(`✅ Checkpoint on Block #${receipt.blockNumber} · Gas: ${receipt.gasUsed}`,'success');
+
+    ['chk-location','chk-temp','chk-handler','chk-notes'].forEach(i=>document.getElementById(i).value='');
+  }
+  catch(e){
+    if((e.reason||'').includes('backwards')) notify('⚠ Cannot move to an earlier stage','error');
+    else notify('❌ '+e.message.slice(0,100),'error');
+    console.error(e);
+  }
+}
+
+async function addCertificate(){
+  if(!connected){notify('⚠ Connect to Ganache first','error');return;}
+  const name=document.getElementById('cert-name').value.trim(),authority=document.getElementById('cert-authority').value.trim(),fromDate=document.getElementById('cert-from').value,untilDate=document.getElementById('cert-until').value,productId=document.getElementById('cert-product').value,standard=document.getElementById('cert-standard').value;
+  if(!name||!authority){notify('⚠ Fill in certificate details','error');return;}
+  const p=products.find(x=>x.id===productId),tokenId=p?p.tokenId:0,fromTs=fromDate?Math.floor(new Date(fromDate).getTime()/1000):Math.floor(Date.now()/1000),untilTs=untilDate?Math.floor(new Date(untilDate).getTime()/1000):fromTs+86400*365;
+  notify('⛏ Recording certificate on Ganache…','success');
+  try{const tx=await compliance.addCertificate(name,authority,standard,tokenId,fromTs,untilTs);const receipt=await tx.wait();notify(`📜 Certificate confirmed on Block #${receipt.blockNumber}`,'success');closeModal('cert-modal');}
+  catch(e){notify('❌ '+e.message.slice(0,100),'error');console.error(e);}
+}
+
+function updateAll(){
+  document.getElementById('stat-total').textContent=products.length;
+  document.getElementById('stat-verified').textContent=products.filter(p=>p.verified).length;
+  document.getElementById('stat-txns').textContent=transactions.length;
+  document.getElementById('cnt-all').textContent=products.length;
+  document.getElementById('cnt-verified').textContent=products.filter(p=>p.verified).length;
+  document.getElementById('cnt-pending').textContent=certs.filter(c=>c.status==='pending').length;
+  document.getElementById('comp-total').textContent=certs.length;
+  ['farm','processing','distribution','retail'].forEach(s=>document.getElementById('cnt-'+s).textContent=products.filter(p=>p.status===s).length);
+  const hasFSSAI=certs.some(c=>c.standard==='FSSAI'&&c.status==='active'),hasISO=certs.some(c=>c.standard==='ISO 22000'&&c.status==='active');
+  document.getElementById('comp-fssai').textContent=hasFSSAI?'Active':'—';document.getElementById('comp-fssai').style.color=hasFSSAI?'#4ade80':'rgba(255,255,255,.4)';
+  document.getElementById('comp-iso').textContent=hasISO?'Certified':'—';document.getElementById('comp-iso').style.color=hasISO?'#4ade80':'rgba(255,255,255,.4)';
+  renderChainViz();renderRecentTxns();renderLedger();renderCertList();renderTraceList(products);updateCertProductSelect();
+}
+
+function renderChainViz(){const viz=document.getElementById('chain-viz');if(!blockchain.length)return;viz.innerHTML='';[...blockchain].sort((a,b)=>a.index-b.index).forEach((b,i)=>{if(i>0)viz.insertAdjacentHTML('beforeend','<div class="chain-arrow">⛓</div>');viz.insertAdjacentHTML('beforeend',`<div class="block-mini ${i===0?'genesis':''}" onclick="inspectBlock(${i})"><div class="block-num">BLOCK #${b.index} ${i===0?'(Genesis)':''}</div><div class="block-hash-mini">${shortHash(b.hash)}</div><div class="block-tx">${b.txCount} tx · ${new Date(b.timestamp).toLocaleDateString()}</div></div>`);});}
+function renderRecentTxns(){const tbody=document.getElementById('recent-txns'),list=[...transactions].reverse().slice(0,6);tbody.innerHTML=list.length?list.map(t=>`<tr><td><span class="hash">${shortHash(t.hash)}</span></td><td style="font-weight:500">${t.product.split('—')[1]?.trim()||t.product}</td><td><span class="badge ${actionBadge(t.action)}">${t.action}</span></td><td style="font-size:12px;color:rgba(255,255,255,.5)">${shortHash(t.from)}</td><td>${stageBadge(t.stage)}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${t.time}</td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,.25);padding:1.5rem">No transactions yet</td></tr>';}
+function renderLedger(){const tbody=document.getElementById('ledger-body'),list=[...transactions].reverse();tbody.innerHTML=list.length?list.map(t=>`<tr><td style="font:500 12px var(--mono);color:rgba(255,255,255,.4)">#${t.block}</td><td><span class="hash">${shortHash(t.hash)}</span></td><td style="font-size:12px;color:rgba(255,255,255,.5)">${shortHash(t.from)}</td><td><span class="badge ${actionBadge(t.action)}" style="font-size:10px">${t.action}</span></td><td style="font-size:13px">${t.product}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${t.time}</td><td><span class="badge badge-green">Confirmed</span></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.25);padding:1.5rem">No transactions yet</td></tr>';}
+function renderCertList(){const el=document.getElementById('cert-list');if(!certs.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div>No certificates yet.</div>';return;}el.innerHTML=certs.map(c=>`<div class="cert-card"><div class="cert-icon" style="background:rgba(96,165,250,.1);color:#60a5fa">${stdIcon(c.standard)}</div><div><div class="cert-name">${c.name}</div><div class="cert-meta">${c.authority} · Valid: ${c.from} → ${c.until}</div><div class="cert-meta" style="margin-top:4px">Product: ${c.product} · <span class="hash">${shortHash(c.hash)}</span></div></div><div class="cert-actions"><span class="badge ${c.status==='active'?'badge-green':'badge-amber'}">${c.status}</span></div></div>`).join('');}
+function renderTraceList(list){const el=document.getElementById('trace-product-list');if(!list.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div>No products found. Register one first.</div>';return;}el.innerHTML=list.map(p=>`<div class="card" style="cursor:pointer;transition:border .2s" onmouseover="this.style.borderColor='rgba(22,163,74,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'" onclick="openJourney('${p.id}')"><div style="display:flex;align-items:center;gap:14px"><div style="font-size:28px">${catIcon(p.category)}</div><div style="flex:1"><div style="font:600 15px var(--font);color:#fff;margin-bottom:3px">${p.name}</div><div style="font-size:12px;color:rgba(255,255,255,.4)">${p.origin} · Batch: ${p.quantity} · Harvest: ${p.harvestDate}</div><div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><span class="hash">${p.id}</span><span class="hash">${shortHash(p.checkpoints[0]?.hash||'—')}</span>${stageBadge(p.status)}${p.verified?'<span class="badge badge-green">✓ Verified</span>':''}</div></div><div style="font-size:12px;color:rgba(255,255,255,.3);text-align:right"><div>${p.checkpoints.length} checkpoints</div><div style="margin-top:4px">Expires: ${p.expiryDate}</div><div style="margin-top:8px;color:var(--green-400);font-size:13px">View Journey →</div></div></div></div>`).join('');}
+
+function openJourney(id){
+  currentProductId=id;const p=products.find(x=>x.id===id);if(!p)return;
+  document.getElementById('trace-product-list').style.display='none';document.getElementById('trace-journey').style.display='block';document.getElementById('journey-title').textContent=p.name;
+  document.getElementById('journey-product-info').innerHTML=`<div style="font:600 14px var(--font);color:rgba(255,255,255,.9);margin-bottom:12px">Product Details</div><div class="info-row"><div class="info-key">Token ID (on-chain)</div><div class="info-val"><span class="hash">${p.tokenId}</span></div></div><div class="info-row"><div class="info-key">FC Ref</div><div class="info-val"><span class="hash">${p.id}</span></div></div><div class="info-row"><div class="info-key">Tx Hash</div><div class="info-val"><span class="hash">${shortHash(p.checkpoints[0]?.hash||'—')}</span></div></div><div class="info-row"><div class="info-key">Name</div><div class="info-val">${p.name}</div></div><div class="info-row"><div class="info-key">Category</div><div class="info-val">${p.category}</div></div><div class="info-row"><div class="info-key">Origin</div><div class="info-val">${p.origin}</div></div><div class="info-row"><div class="info-key">Quantity</div><div class="info-val">${p.quantity}</div></div><div class="info-row"><div class="info-key">Harvest Date</div><div class="info-val">${p.harvestDate}</div></div><div class="info-row"><div class="info-key">Expiry Date</div><div class="info-val">${p.expiryDate}</div></div><div class="info-row"><div class="info-key">Status</div><div class="info-val">${stageBadge(p.status)}</div></div><div class="info-row"><div class="info-key">Notes</div><div class="info-val" style="color:rgba(255,255,255,.5)">${p.notes}</div></div>`;
+  document.getElementById('journey-qr').innerHTML=`<div style="font:600 14px var(--font);color:rgba(255,255,255,.9);margin-bottom:12px">On-Chain Verification</div><div style="display:flex;gap:14px;align-items:flex-start"><div>${qrSvg()}</div><div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.9"><div>Token ID: <span class="hash">${p.tokenId}</span></div><div>Network: Ganache (Local)</div><div>FoodToken: <span class="hash">${shortHash(CONFIG.foodTokenAddr)}</span></div><div>SupplyChain: <span class="hash">${shortHash(CONFIG.supplyChainAddr)}</span></div><div style="margin-top:8px">${p.verified?'<span class="badge badge-green">✓ Compliant</span>':'<span class="badge badge-amber">Pending cert</span>'}</div></div></div>`;
+  let tl='<div class="timeline">';
+  p.checkpoints.forEach((c,i)=>{const isCurrent=i===p.checkpoints.length-1;tl+=`<div class="timeline-item"><div class="timeline-dot ${isCurrent?'current':'done'}">${STAGE_EMOJI[c.stageNum]||'📦'}</div><div class="timeline-title">${STAGE_LABELS[c.stageNum]||c.stage} — ${c.location}</div><div class="timeline-meta">${shortHash(c.handler)} · ${new Date(c.time).toLocaleString('en-IN')} · 🌡 ${c.temp}°C</div><div class="timeline-data">Tx Hash: ${shortHash(c.hash)}<br>Notes: ${c.notes}</div></div>`;});
+  const done=new Set(p.checkpoints.map(c=>c.stageNum));[0,1,2,3].filter(s=>!done.has(s)).forEach(s=>{tl+=`<div class="timeline-item"><div class="timeline-dot pending">○</div><div class="timeline-title" style="color:rgba(255,255,255,.3)">${STAGE_LABELS[s]} — Pending</div></div>`;});
+  tl+='</div>';document.getElementById('journey-timeline').innerHTML=tl;
+}
+
+function closeJourney(){currentProductId=null;document.getElementById('trace-journey').style.display='none';document.getElementById('trace-product-list').style.display='block';}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const idx=['dashboard','register','trace','compliance','ledger','setup'].indexOf(id);
+  document.querySelectorAll('.nav-tab')[idx]?.classList.add('active');
+  if(id==='trace'){closeJourney();renderTraceList(products);}
+}
+function filterProducts(stage,el){document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));el.classList.add('active');showPage('trace');renderTraceList(stage==='all'?products:products.filter(p=>p.status===stage));}
+function traceSearch(q){const lower=q.toLowerCase();renderTraceList(q?products.filter(p=>p.id.toLowerCase().includes(lower)||p.name.toLowerCase().includes(lower)||p.origin.toLowerCase().includes(lower)):products);}
+function inspectBlock(i){const b=[...blockchain].sort((a,x)=>a.index-x.index)[i];document.getElementById('block-modal-content').innerHTML=`<div class="info-row"><div class="info-key">Block Number</div><div class="info-val">#${b.index}</div></div><div class="info-row"><div class="info-key">Block Hash</div><div class="info-val"><span class="hash">${b.hash}</span></div></div><div class="info-row"><div class="info-key">Previous Hash</div><div class="info-val"><span class="hash">${shortHash(b.prevHash)}</span></div></div><div class="info-row"><div class="info-key">Timestamp</div><div class="info-val">${b.timestamp}</div></div><div class="info-row"><div class="info-key">Transactions</div><div class="info-val">${b.txCount}</div></div><div style="margin-top:16px;background:rgba(255,255,255,.04);border-radius:8px;padding:12px;font:400 11px var(--mono);color:rgba(255,255,255,.5);white-space:pre-wrap">${JSON.stringify(b.data,null,2)}</div>`;openModal('block-modal');}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function openCertModal(){updateCertProductSelect();openModal('cert-modal');}
+function updateCertProductSelect(){const sel=document.getElementById('cert-product');if(!sel)return;sel.innerHTML='<option value="">All Products</option>'+products.map(p=>`<option value="${p.id}">${p.id} — ${p.name}</option>`).join('');}
+function updateConfig(){CONFIG.foodTokenAddr=document.getElementById('addr-foodtoken').value.trim();CONFIG.supplyChainAddr=document.getElementById('addr-supplychain').value.trim();CONFIG.complianceAddr=document.getElementById('addr-compliance').value.trim();CONFIG.rpcUrl=document.getElementById('addr-rpc').value.trim()||'http://127.0.0.1:7545';}
+async function saveAndConnect(){updateConfig();await connectGanache();}
+function notify(msg,type='success'){const el=document.getElementById('notification');el.textContent=msg;el.style.background=type==='error'?'#b91c1c':'#15803d';el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),4000);}
+function shortHash(h){return h&&h!=='—'?h.slice(0,8)+'…'+h.slice(-4):'—';}
+function tsToDate(ts){return ts>0?new Date(ts*1000).toISOString().split('T')[0]:'—';}
+function tsToTime(ts){return ts>0?new Date(ts*1000).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}):'—';}
+function stageBadge(s){const m={farm:'badge-green',processing:'badge-blue',distribution:'badge-amber',retail:'badge-purple','—':'badge-blue'},l={farm:'🌾 Farm',processing:'🏭 Processing',distribution:'🚛 Distribution',retail:'🏪 Retail'};return`<span class="badge ${m[s]||'badge-blue'}">${l[s]||s}</span>`;}
+function actionBadge(a){return{REGISTER_PRODUCT:'badge-green',UPDATE_STAGE:'badge-blue',ADD_CERTIFICATE:'badge-purple'}[a]||'badge-blue';}
+function catIcon(c){return{'Fresh Produce':'🥭','Dairy':'🧀','Meat & Poultry':'🍗','Grains & Cereals':'🌾','Seafood':'🐟','Processed Food':'🥫','Beverages':'🧃'}[c]||'📦';}
+function stdIcon(s){return{'FSSAI':'🏛','ISO 22000':'🔬','HACCP':'⚗','Organic India':'🌿','USDA Organic':'🌱','GlobalG.A.P.':'🌍','Halal':'☪','Kosher':'✡'}[s]||'📜';}
+function qrSvg(){const pat=[1,1,1,0,1,1,1,1,0,1,0,1,0,1,1,0,0,1,0,0,1,1,1,0,0,0,1,0,0,1,1,1,0,1,1,0,0,0,0,1,0,1,1,0,1,1,1,0,1];return`<div class="qr-box"><div class="qr-inner">${pat.map(p=>`<div class="qr-px" style="background:${p?'rgba(74,222,128,.8)':'transparent'}"></div>`).join('')}</div></div>`;}
+window.addEventListener('load',()=>{updateAll();});
+</script>
+</body>
+</html>
