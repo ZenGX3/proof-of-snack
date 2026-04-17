@@ -87,6 +87,32 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .badge-blue{background:rgba(96,165,250,.12);color:#60a5fa;border:1px solid rgba(96,165,250,.25)}
 .badge-purple{background:rgba(192,132,252,.12);color:#c084fc;border:1px solid rgba(192,132,252,.25)}
 
+/* Role-specific badges */
+.badge-admin {
+  background: rgba(139,92,246,.18);
+  color: #8b5cf6;
+  border: 1px solid rgba(139,92,246,.35);
+}
+
+/* Minter → amber */
+.badge-minter {
+  background: rgba(251,191,36,.12);
+  color: #fbbf24;
+  border: 1px solid rgba(251,191,36,.25);
+}
+
+.badge-admin-minter {
+  background: rgba(20,184,166,.15);
+  color: #14b8a6;
+  border: 1px solid rgba(20,184,166,.35);
+}
+
+.badge-viewer {
+  background: rgba(148,163,184,.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148,163,184,.25);
+}
+
 /* Hash */
 .hash{font:400 12px var(--mono);color:rgba(74,222,128,.7);background:rgba(74,222,128,.06);padding:2px 8px;border-radius:4px}
 
@@ -482,7 +508,13 @@ textarea{resize:vertical;min-height:80px}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <script>
 const CONFIG={rpcUrl:'http://127.0.0.1:7545',foodTokenAddr:'',supplyChainAddr:'',complianceAddr:''};
-const FOOD_TOKEN_ABI=["function registerProduct(address to, string name, string category, string origin, uint256 quantity, uint256 harvestDate, uint256 expiryDate, string notes) returns (uint256)","function products(uint256) view returns (string name,string category,string origin,uint256 quantity,uint256 harvestDate,uint256 expiryDate,string notes,address registeredBy,uint256 timestamp)","function totalSupply() view returns (uint256)","event ProductRegistered(uint256 indexed tokenId, string name, address registeredBy)"];
+const FOOD_TOKEN_ABI = [
+  "function registerProduct(address to, string name, string category, string origin, uint256 quantity, uint256 harvestDate, uint256 expiryDate, string notes) returns (uint256)",
+  "function products(uint256) view returns (string name,string category,string origin,uint256 quantity,uint256 harvestDate,uint256 expiryDate,string notes,address registeredBy,uint256 timestamp)",
+  "function totalSupply() view returns (uint256)",
+  "function hasRole(bytes32 role, address account) view returns (bool)",
+  "event ProductRegistered(uint256 indexed tokenId, string name, address registeredBy)"
+];
 const SUPPLY_CHAIN_ABI=["function addCheckpoint(uint256 tokenId, uint8 stage, string location, int256 temperature, string notes)","function getCheckpoints(uint256 tokenId) view returns (tuple(uint8 stage,string location,int256 temperature,address handler,string notes,uint256 recordedAt)[])","function currentStage(uint256) view returns (uint8)","event CheckpointAdded(uint256 indexed tokenId, uint8 stage, address handler, string location)","event ContaminationAlert(uint256 indexed tokenId, string reason)"];
 const COMPLIANCE_ABI=["function addCertificate(string name, string authority, string standard, uint256 tokenId, uint256 validFrom, uint256 validUntil) returns (uint256)","function certificates(uint256) view returns (string name,string authority,string standard,uint256 tokenId,uint256 validFrom,uint256 validUntil,address issuedBy,bool revoked)","function isCompliant(uint256 tokenId) view returns (bool)","function getCertCount() view returns (uint256)","event CertificateAdded(uint256 indexed certId, uint256 tokenId, string standard)"];
 
@@ -493,30 +525,136 @@ const STAGE_NAMES=['farm','processing','distribution','retail'];
 const STAGE_LABELS=['🌾 Farm','🏭 Processing','🚛 Distribution','🏪 Retail'];
 const STAGE_EMOJI=['🌾','🏭','🚛','🏪'];
 
-async function connectGanache(){
-  if(!CONFIG.foodTokenAddr){notify('⚠ Paste contract addresses in the Setup tab first','error');showPage('setup');return;}
+async function getAccountRole(address){
+  try{
+    if(!foodToken) return "Unknown";
+
+    const DEFAULT_ADMIN_ROLE = '0x0000000000000000000000000000000000000000000000000000000000000000';
+    const MINTER_ROLE = '0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6';
+
+    // 🔥 IMPORTANT: ensure address is string
+    const addr = typeof address === 'string' ? address : address.address;
+
+    const isAdmin = await foodToken.hasRole(DEFAULT_ADMIN_ROLE, addr);
+    const isMinter = await foodToken.hasRole(MINTER_ROLE, addr);
+
+    console.log("ROLE CHECK:", addr, { isAdmin, isMinter });
+
+    if(isAdmin && isMinter) return "Admin + Minter";
+    if(isAdmin) return "Admin";
+    if(isMinter) return "Minter";
+    return "Viewer";
+
+  }catch(e){
+    console.error("Role fetch error:", e);
+    return "Unknown";
+  }
+}
+
+function getRoleClass(role){
+  if(role === "Admin") return 'badge badge-admin';
+  if(role === "Minter") return 'badge badge-minter';
+  if(role === "Admin + Minter") return 'badge badge-admin-minter';
+  return 'badge badge-viewer';
+}
+
+async function connectGanache(index = 0){
+  if(!CONFIG.foodTokenAddr){
+    notify('⚠ Paste contract addresses in the Setup tab first','error');
+    showPage('setup');
+    return;
+  }
+
   try{
     setConnectState('connecting');
-    provider=new ethers.JsonRpcProvider(CONFIG.rpcUrl);
+
+    provider = new ethers.JsonRpcProvider(CONFIG.rpcUrl);
     await provider.getNetwork();
-    accounts=await provider.listAccounts();
-    signer=await provider.getSigner(0);
-    foodToken=new ethers.Contract(CONFIG.foodTokenAddr,FOOD_TOKEN_ABI,signer);
-    supplyChain=new ethers.Contract(CONFIG.supplyChainAddr,SUPPLY_CHAIN_ABI,signer);
-    compliance=new ethers.Contract(CONFIG.complianceAddr,COMPLIANCE_ABI,signer);
-    const code=await provider.getCode(CONFIG.foodTokenAddr);
-    if(code==='0x'){notify('❌ FoodToken not found at that address — redeploy in Remix','error');setConnectState('error');return;}
+
+    const signers = await provider.listAccounts();
+
+    accounts = await Promise.all(signers.map(async (s)=>({
+      signer: s,
+      address: await s.getAddress()
+    })));
+
+    signer = accounts[index].signer;
+
+    // ✅ INIT CONTRACTS FIRST
+    foodToken = new ethers.Contract(CONFIG.foodTokenAddr,FOOD_TOKEN_ABI,signer);
+    supplyChain = new ethers.Contract(CONFIG.supplyChainAddr,SUPPLY_CHAIN_ABI,signer);
+    compliance = new ethers.Contract(CONFIG.complianceAddr,COMPLIANCE_ABI,signer);
+
+    const code = await provider.getCode(CONFIG.foodTokenAddr);
+    if(code==='0x'){
+      notify('❌ FoodToken not found at that address — redeploy in Remix','error');
+      setConnectState('error');
+      return;
+    }
+
+    // ✅ ACTIVE ACCOUNT ROLE
+    const addr = accounts[index].address;
+    const role = await getAccountRole(addr);
+    const roleClass = getRoleClass(role);
+
+    let el = document.getElementById('current-account');
+    if(!el){
+      const div = document.createElement('div');
+      div.id = 'current-account';
+      div.style.marginTop = '10px';
+      div.style.fontSize = '13px';
+      div.style.color = '#aaa';
+      document.getElementById('accounts-card').appendChild(div);
+      el = div;
+    }
+
+    el.innerHTML = `
+      Active: <span class="hash">${addr}</span>
+      <span class="${roleClass}" style="margin-left:6px">${role}</span>
+    `;
+
     await syncFromChain();
     listenToEvents();
-    connected=true;
+
+    connected = true;
     setConnectState('connected');
-    notify('✅ Connected to Ganache — '+accounts.length+' accounts loaded','success');
+
+    notify(`✅ Connected as Account ${index}`,'success');
+
     document.getElementById('accounts-card').style.display='block';
-    document.getElementById('accounts-list').innerHTML=accounts.map((a,i)=>`<div class="info-row"><div class="info-key" style="min-width:80px">Account ${i}</div><div class="info-val"><span class="hash" style="font-size:11px">${a.address}</span>${i===0?'<span class="badge badge-green" style="margin-left:8px">deployer</span>':''}</div></div>`).join('');
-    setInterval(async()=>{try{const bn=await provider.getBlockNumber();document.getElementById('current-block').textContent=bn;document.getElementById('stat-blocks').textContent=bn;}catch(_){}},3000);
+
+    // ✅ ACCOUNT LIST WITH ROLES
+    document.getElementById('accounts-list').innerHTML =
+      await Promise.all(accounts.map(async (a,i)=>{
+        const role = await getAccountRole(a.address);
+        const roleClass = getRoleClass(role);
+
+        return `
+          <div class="info-row" style="cursor:pointer" onclick="connectGanache(${i})">
+            <div class="info-key" style="min-width:80px">Account ${i}</div>
+            <div class="info-val">
+              <span class="hash" style="font-size:11px">${a.address}</span>
+              <span class="${roleClass}" style="margin-left:8px">${role}</span>
+              ${i===index?'<span class="badge badge-green" style="margin-left:6px">active</span>':''}
+            </div>
+          </div>
+        `;
+      })).then(r=>r.join(''));
+
+    setInterval(async()=>{
+      try{
+        const bn=await provider.getBlockNumber();
+        document.getElementById('current-block').textContent=bn;
+        document.getElementById('stat-blocks').textContent=bn;
+      }catch(_){}
+    },3000);
+
   }catch(e){
-    console.error(e);setConnectState('error');
-    notify('❌ '+(e.message.includes('ECONNREFUSED')?'Ganache not running on port 7545':e.message.slice(0,100)),'error');
+    console.error(e);
+    setConnectState('error');
+    notify('❌ '+(e.message.includes('ECONNREFUSED')
+      ?'Ganache not running on port 7545'
+      :e.message.slice(0,100)),'error');
   }
 }
 
@@ -687,6 +825,67 @@ function formatBlock(b){return{index:b.number,hash:b.hash,prevHash:b.parentHash,
 
 function listenToEvents(){
   foodToken.on('ProductRegistered',async(tokenId,name,registeredBy,event)=>{await loadProduct(Number(tokenId),event);const b=await event.getBlock();if(!blockchain.find(x=>x.index===b.number))blockchain.push(formatBlock(b));updateAll();notify('🌿 New product minted: '+name,'success');});
+  foodToken.on('RoleGranted', async (role, account, sender) => {
+    notify('🔑 Role updated','success');
+
+    // 🔥 refresh account list
+    document.getElementById('accounts-list').innerHTML =
+      await Promise.all(accounts.map(async (a,i)=>{
+        const roleName = await getAccountRole(a.address);
+        const roleClass = getRoleClass(roleName);
+
+        return `
+          <div class="info-row" style="cursor:pointer" onclick="connectGanache(${i})">
+            <div class="info-key" style="min-width:80px">Account ${i}</div>
+            <div class="info-val">
+              <span class="hash" style="font-size:11px">${a.address}</span>
+              <span class="${roleClass}" style="margin-left:8px">${roleName}</span>
+            </div>
+          </div>
+        `;
+      })).then(r=>r.join(''));
+
+    // 🔥 refresh current account role
+    const addr = await signer.getAddress();
+    const roleName = await getAccountRole(addr);
+    const roleClass = getRoleClass(roleName);
+
+    document.getElementById('current-account').innerHTML = `
+      Active: <span class="hash">${addr}</span>
+      <span class="${roleClass}" style="margin-left:6px">${roleName}</span>
+    `;
+  });
+
+
+  foodToken.on('RoleRevoked', async () => {
+    notify('⚠ Role revoked','error');
+
+    // same refresh logic
+    document.getElementById('accounts-list').innerHTML =
+      await Promise.all(accounts.map(async (a,i)=>{
+        const roleName = await getAccountRole(a.address);
+        const roleClass = getRoleClass(roleName);
+
+        return `
+          <div class="info-row" style="cursor:pointer" onclick="connectGanache(${i})">
+            <div class="info-key" style="min-width:80px">Account ${i}</div>
+            <div class="info-val">
+              <span class="hash" style="font-size:11px">${a.address}</span>
+              <span class="${roleClass}" style="margin-left:8px">${roleName}</span>
+            </div>
+          </div>
+        `;
+      })).then(r=>r.join(''));
+
+    const addr = await signer.getAddress();
+    const roleName = await getAccountRole(addr);
+    const roleClass = getRoleClass(roleName);
+
+    document.getElementById('current-account').innerHTML = `
+      Active: <span class="hash">${addr}</span>
+      <span class="${roleClass}" style="margin-left:6px">${roleName}</span>
+    `;
+  });
   supplyChain.on('CheckpointAdded',async(tokenId,stage,handler,location,event)=>{const id=Number(tokenId);const chks=await supplyChain.getCheckpoints(id);const p=products.find(x=>x.tokenId===id);if(p){p.status=STAGE_NAMES[Number(stage)];p.checkpoints=chks.map(c=>({stage:STAGE_NAMES[Number(c.stage)],stageNum:Number(c.stage),location:c.location,temp:(Number(c.temperature)/10).toFixed(1),handler:c.handler,notes:c.notes,time:new Date(Number(c.recordedAt)*1000).toISOString(),hash:event.transactionHash}));if(Number(stage)===3)p.verified=true;}const b=await event.getBlock();transactions.push({block:b.number,hash:event.transactionHash,from:handler,action:'UPDATE_STAGE',product:p?p.id+' — '+p.name:id,stage:STAGE_NAMES[Number(stage)],time:tsToTime(b.timestamp)});if(!blockchain.find(x=>x.index===b.number))blockchain.push(formatBlock(b));updateAll();if(currentProductId===p?.id)openJourney(p.id);notify('📍 Checkpoint confirmed on chain!','success');});
   supplyChain.on('ContaminationAlert',(tokenId,reason)=>{document.getElementById('alert-contamination').style.display='flex';notify('🚨 CONTAMINATION ALERT Token #'+tokenId+': '+reason,'error');});
   compliance.on('CertificateAdded', async (certId, tokenId, standard, event) => {
@@ -708,7 +907,46 @@ function listenToEvents(){
     updateAll();
   });
 
-  provider.on('block',async(blockNumber)=>{document.getElementById('current-block').textContent=blockNumber;document.getElementById('stat-blocks').textContent=blockNumber;if(!blockchain.find(x=>x.index===blockNumber)){const b=await provider.getBlock(blockNumber);if(b){blockchain.push(formatBlock(b));renderChainViz();}}});
+  provider.on('block', async (blockNumber)=>{
+    document.getElementById('current-block').textContent = blockNumber;
+    document.getElementById('stat-blocks').textContent = blockNumber;
+
+    if(!blockchain.find(x=>x.index===blockNumber)){
+      const b = await provider.getBlock(blockNumber);
+      if(b){
+        blockchain.push(formatBlock(b));
+        renderChainViz();
+      }
+    }
+
+    // 🔥 ADD THIS (role auto-refresh)
+    if(connected){
+      document.getElementById('accounts-list').innerHTML =
+        await Promise.all(accounts.map(async (a,i)=>{
+          const roleName = await getAccountRole(a.address);
+          const roleClass = getRoleClass(roleName);
+
+          return `
+            <div class="info-row" style="cursor:pointer" onclick="connectGanache(${i})">
+              <div class="info-key" style="min-width:80px">Account ${i}</div>
+              <div class="info-val">
+                <span class="hash" style="font-size:11px">${a.address}</span>
+                <span class="${roleClass}" style="margin-left:8px">${roleName}</span>
+              </div>
+            </div>
+          `;
+        })).then(r=>r.join(''));
+
+      const addr = await signer.getAddress();
+      const roleName = await getAccountRole(addr);
+      const roleClass = getRoleClass(roleName);
+
+      document.getElementById('current-account').innerHTML = `
+        Active: <span class="hash">${addr}</span>
+        <span class="${roleClass}" style="margin-left:6px">${roleName}</span>
+      `;
+    }
+  });
 }
 
 async function registerProduct(){
@@ -732,7 +970,33 @@ async function registerProduct(){
     document.getElementById('reg-result').style.display='block';
     document.getElementById('reg-result-content').innerHTML=`<div class="info-row"><div class="info-key">Token ID</div><div class="info-val"><span class="hash">${id}</span></div></div><div class="info-row"><div class="info-key">Block</div><div class="info-val">#${receipt.blockNumber}</div></div><div class="info-row"><div class="info-key">Block Hash</div><div class="info-val"><span class="hash">${shortHash(receipt.blockHash)}</span></div></div><div class="info-row"><div class="info-key">Tx Hash</div><div class="info-val"><span class="hash">${shortHash(receipt.hash)}</span></div></div><div class="info-row"><div class="info-key">Gas Used</div><div class="info-val">${receipt.gasUsed.toString()}</div></div><div class="info-row"><div class="info-key">Status</div><div class="info-val"><span class="badge badge-green">✓ Confirmed</span></div></div><div style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="showPage('trace');openJourney('${id}')">View Journey →</button></div>`;
     ['reg-name','reg-origin','reg-quantity','reg-date','reg-expiry','reg-notes'].forEach(i=>document.getElementById(i).value='');
-  }catch(e){notify('❌ Transaction failed: '+e.message.slice(0,80),'error');console.error(e);}
+  }
+  catch(e){
+    console.error("FULL ERROR:", e);
+
+    let msg = '';
+
+    // 🔥 extract all possible error sources
+    if(e.reason) msg = e.reason;
+    else if(e.shortMessage) msg = e.shortMessage;
+    else if(e.message) msg = e.message;
+    else if(e?.info?.error?.message) msg = e.info.error.message;
+
+    msg = msg.toLowerCase();
+
+    // 🔥 AccessControl detection (robust)
+    if(
+      msg.includes('accesscontrol') ||
+      msg.includes('missing role') ||
+      msg.includes('not authorized') ||
+      msg.includes('execution reverted')
+    ){
+      notify('🚫 You need MINTER role to register products','error');
+    }
+    else{
+      notify('❌ Transaction failed','error');
+    }
+  }
 }
 
 async function addCheckpoint(){
@@ -823,7 +1087,15 @@ async function addCertificate(){
     closeModal('cert-modal');
   }
   catch(e){
-    notify('❌ '+e.message.slice(0,100),'error');
+    const msg = e.reason || e.message || '';
+
+    if(msg.includes('AccessControl')){
+      notify('🚫 Only authorized accounts can add certificates','error');
+    }
+    else{
+      notify('❌ '+msg.slice(0,80),'error');
+    }
+
     console.error(e);
   }
 }
