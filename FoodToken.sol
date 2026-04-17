@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// ✅ Use fixed OZ version (important for Remix)
+// remix imports
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.0.1/contracts/token/ERC721/ERC721.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.0.1/contracts/access/AccessControl.sol";
 
@@ -64,7 +64,7 @@ contract FoodToken is ERC721, AccessControl {
         return tokenId;
     }
 
-    // ✅ REQUIRED for OZ v5 (fixes your earlier error)
+    // fixed earlier error gives interface
     function supportsInterface(bytes4 interfaceId)
         public
         view

@@ -7,13 +7,13 @@ contract SupplyChain {
     struct Checkpoint {
         Stage stage;
         string location;
-        int256 temperature;   // stored as °C × 10 to avoid floats
+        int256 temperature;   // fixed over here: stored as °C × 10 to avoid floats
         address handler;
         string notes;
         uint256 timestamp;
     }
 
-    mapping(uint256 => Checkpoint[]) public checkpoints;  // tokenId → history
+    mapping(uint256 => Checkpoint[]) public checkpoints;  // tokenId -> history
     mapping(uint256 => Stage) public currentStage;
 
     event CheckpointAdded(uint256 indexed tokenId, Stage stage, address handler);
