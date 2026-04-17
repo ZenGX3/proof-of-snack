@@ -529,14 +529,36 @@ function setConnectState(s){
 
 async function syncFromChain(){
   products=[];certs=[];transactions=[];blockchain=[];
-  const regEvents=await foodToken.queryFilter(foodToken.filters.ProductRegistered(),0,'latest');
-  for(const ev of regEvents)await loadProduct(Number(ev.args.tokenId),ev);
-  let certCount=0;try{certCount=Number(await compliance.getCertCount());}catch(_){}
-  for(let i=0;i<certCount;i++){const c=await compliance.certificates(i);certs.push(formatCert(c,i));}
-  const latest=await provider.getBlock('latest');
-  for(let n=Math.max(0,latest.number-9);n<=latest.number;n++){const b=await provider.getBlock(n,true);if(b)blockchain.push(formatBlock(b));}
+
+  // ✅ load certificates correctly
+  let certCount = 0;
+  try{
+    certCount = Number(await compliance.getCertCount());
+  }catch(_){}
+
+  for(let i=0;i<certCount;i++){
+    const c = await compliance.certificates(i);
+    certs.push(formatCert(c,i));
+  }
+
+  // ✅ load product events
+  const regEvents = await foodToken.queryFilter(
+    foodToken.filters.ProductRegistered(),
+    0,'latest'
+  );
+
+  for(const ev of regEvents){
+    await loadProduct(Number(ev.args.tokenId),ev);
+  }
+
+  // ✅ load blocks
+  const latest = await provider.getBlock('latest');
+  for(let n=Math.max(0,latest.number-9);n<=latest.number;n++){
+    const b=await provider.getBlock(n,true);
+    if(b) blockchain.push(formatBlock(b));
+  }
+
   updateAll();
-  console.log("Loaded products:", products);
 }
 
 async function loadProduct(tokenId,regEvent){
@@ -552,13 +574,16 @@ async function loadProduct(tokenId,regEvent){
       temp:(Number(c.temperature)/10).toFixed(1),
       handler:c.handler,
       notes:c.notes,
-      time:new Date(Number(c.recordedAt)*1000).toISOString(),
-      hash:regEvent?.transactionHash||'—'
+      time:new Date(Number(c.recordedAt)*1000),
+      hash:'—'
     }));
 
-    // 🔥 FIX: derive status from LAST checkpoint
     const lastCheckpoint = checkpoints[checkpoints.length - 1];
     const status = lastCheckpoint ? lastCheckpoint.stage : 'farm';
+
+    const isCertified = certs.some(c =>
+      c.product === ('FC-'+String(tokenId).padStart(6,'0')) && !c.revoked
+    );
 
     const p={
       id:'FC-'+String(tokenId).padStart(6,'0'),
@@ -570,27 +595,44 @@ async function loadProduct(tokenId,regEvent){
       harvestDate:tsToDate(Number(meta.harvestDate)),
       expiryDate:tsToDate(Number(meta.expiryDate)),
       notes:meta.notes,
-      status, // ✅ FIXED HERE
-      verified:ok,
+      status,
+      verified: ok || isCertified,
       checkpoints
     };
 
-    if(regEvent){
-      const blk=await regEvent.getBlock();
+    const regEvents = await foodToken.queryFilter(
+      foodToken.filters.ProductRegistered(tokenId),
+      0,'latest'
+    );
+
+    for(const ev of regEvents){
+      const blk = await ev.getBlock();
+
       transactions.push({
-        block:blk.number,
-        hash:regEvent.transactionHash,
-        from:meta.registeredBy,
-        action:'REGISTER_PRODUCT',
-        product:p.id+' — '+p.name,
-        stage:'farm',
-        time:tsToTime(blk.timestamp)
+        block: blk.number,
+        hash: ev.transactionHash,
+        from: ev.args.registeredBy,
+        action: 'REGISTER_PRODUCT',
+        product: p.id+' — '+p.name,
+        stage: 'farm',
+        time: tsToTime(blk.timestamp)
       });
     }
 
-    const chkEvents=await supplyChain.queryFilter(supplyChain.filters.CheckpointAdded(tokenId),0,'latest');
-    for(const ev of chkEvents){
+    // CHECKPOINT EVENTS
+    const chkEvents=await supplyChain.queryFilter(
+      supplyChain.filters.CheckpointAdded(tokenId),
+      0,'latest'
+    );
+
+    for(let i=0;i<chkEvents.length;i++){
+      const ev=chkEvents[i];
       const blk=await ev.getBlock();
+
+      if(p.checkpoints[i]){
+        p.checkpoints[i].hash = ev.transactionHash;
+      }
+
       transactions.push({
         block:blk.number,
         hash:ev.transactionHash,
@@ -609,14 +651,63 @@ async function loadProduct(tokenId,regEvent){
   }
 }
 
-function formatCert(c,i){return{id:i,name:c.name,authority:c.authority,standard:c.standard,product:'FC-'+String(Number(c.tokenId)).padStart(6,'0'),from:tsToDate(Number(c.validFrom)),until:tsToDate(Number(c.validUntil)),status:c.revoked?'revoked':'active',hash:c.issuedBy};}
+function formatCert(c,i){
+  const validFrom = parseInt(c[4].toString());
+  const validUntil = parseInt(c[5].toString());
+  const now = Math.floor(Date.now()/1000);
+
+  let status;
+  if(c[7]){
+    status = 'revoked';
+  } else if(now < validFrom){
+    status = 'pending';
+  } else if(now <= validUntil){
+    status = 'active';
+  } else {
+    status = 'expired';
+  }
+
+  return {
+    id: i,
+    name: c[0],
+    authority: c[1],
+    standard: c[2],
+    product: 'FC-'+String(c[3]).padStart(6,'0'),
+    validFrom,
+    validUntil,
+    validFromStr: tsToDate(validFrom),
+    validUntilStr: tsToDate(validUntil),
+    issuedBy: c[6],
+    revoked: c[7],
+    status
+  };
+}
+
 function formatBlock(b){return{index:b.number,hash:b.hash,prevHash:b.parentHash,timestamp:new Date(b.timestamp*1000).toISOString(),txCount:b.transactions?b.transactions.length:0,data:{type:'GANACHE_BLOCK',gasUsed:b.gasUsed?.toString()}};}
 
 function listenToEvents(){
   foodToken.on('ProductRegistered',async(tokenId,name,registeredBy,event)=>{await loadProduct(Number(tokenId),event);const b=await event.getBlock();if(!blockchain.find(x=>x.index===b.number))blockchain.push(formatBlock(b));updateAll();notify('🌿 New product minted: '+name,'success');});
   supplyChain.on('CheckpointAdded',async(tokenId,stage,handler,location,event)=>{const id=Number(tokenId);const chks=await supplyChain.getCheckpoints(id);const p=products.find(x=>x.tokenId===id);if(p){p.status=STAGE_NAMES[Number(stage)];p.checkpoints=chks.map(c=>({stage:STAGE_NAMES[Number(c.stage)],stageNum:Number(c.stage),location:c.location,temp:(Number(c.temperature)/10).toFixed(1),handler:c.handler,notes:c.notes,time:new Date(Number(c.recordedAt)*1000).toISOString(),hash:event.transactionHash}));if(Number(stage)===3)p.verified=true;}const b=await event.getBlock();transactions.push({block:b.number,hash:event.transactionHash,from:handler,action:'UPDATE_STAGE',product:p?p.id+' — '+p.name:id,stage:STAGE_NAMES[Number(stage)],time:tsToTime(b.timestamp)});if(!blockchain.find(x=>x.index===b.number))blockchain.push(formatBlock(b));updateAll();if(currentProductId===p?.id)openJourney(p.id);notify('📍 Checkpoint confirmed on chain!','success');});
   supplyChain.on('ContaminationAlert',(tokenId,reason)=>{document.getElementById('alert-contamination').style.display='flex';notify('🚨 CONTAMINATION ALERT Token #'+tokenId+': '+reason,'error');});
-  compliance.on('CertificateAdded',async(certId,tokenId,standard,event)=>{const c=await compliance.certificates(Number(certId));certs.push(formatCert(c,Number(certId)));transactions.push({block:'—',hash:event.transactionHash,from:c.issuedBy,action:'ADD_CERTIFICATE',product:c.name,stage:'—',time:tsToTime(Math.floor(Date.now()/1000))});updateAll();notify('📜 Certificate recorded on-chain: '+standard,'success');});
+  compliance.on('CertificateAdded', async (certId, tokenId, standard, event) => {
+    const blk = await event.getBlock();
+    const c = await compliance.certificates(Number(certId));
+
+    certs.push(formatCert(c, Number(certId)));
+
+    transactions.push({
+      block: blk.number,
+      hash: event.transactionHash,
+      from: c.issuedBy,
+      action: 'ADD_CERTIFICATE',
+      product: 'FC-'+String(tokenId).padStart(6,'0'),
+      stage: 'compliance',
+      time: tsToTime(blk.timestamp)
+    });
+
+    updateAll();
+  });
+
   provider.on('block',async(blockNumber)=>{document.getElementById('current-block').textContent=blockNumber;document.getElementById('stat-blocks').textContent=blockNumber;if(!blockchain.find(x=>x.index===blockNumber)){const b=await provider.getBlock(blockNumber);if(b){blockchain.push(formatBlock(b));renderChainViz();}}});
 }
 
@@ -678,34 +769,104 @@ async function addCheckpoint(){
 }
 
 async function addCertificate(){
-  if(!connected){notify('⚠ Connect to Ganache first','error');return;}
-  const name=document.getElementById('cert-name').value.trim(),authority=document.getElementById('cert-authority').value.trim(),fromDate=document.getElementById('cert-from').value,untilDate=document.getElementById('cert-until').value,productId=document.getElementById('cert-product').value,standard=document.getElementById('cert-standard').value;
-  if(!name||!authority){notify('⚠ Fill in certificate details','error');return;}
-  const p=products.find(x=>x.id===productId),tokenId=p?p.tokenId:0,fromTs=fromDate?Math.floor(new Date(fromDate).getTime()/1000):Math.floor(Date.now()/1000),untilTs=untilDate?Math.floor(new Date(untilDate).getTime()/1000):fromTs+86400*365;
+  if(!connected){
+    notify('⚠ Connect to Ganache first','error');
+    return;
+  }
+
+  const name = document.getElementById('cert-name').value.trim(),
+        authority = document.getElementById('cert-authority').value.trim(),
+        fromDate = document.getElementById('cert-from').value,
+        untilDate = document.getElementById('cert-until').value,
+        productId = document.getElementById('cert-product').value,
+        standard = document.getElementById('cert-standard').value;
+
+  if(!name || !authority){
+    notify('⚠ Fill in certificate details','error');
+    return;
+  }
+  const p = products.find(x => x.id === productId);
+  if(!p){
+    notify('❌ Product not found','error');
+    return;
+  }
+
+  const tokenId = p.tokenId;
+  const fromTs = fromDate
+    ? Math.floor(new Date(fromDate).getTime()/1000)
+    : Math.floor(Date.now()/1000);
+
+  const untilTs = untilDate
+    ? Math.floor(new Date(untilDate).getTime()/1000)
+    : fromTs + 86400*365;
+
+  console.log('CERT DEBUG:', fromTs, untilTs, tokenId);
+
   notify('⛏ Recording certificate on Ganache…','success');
-  try{const tx=await compliance.addCertificate(name,authority,standard,tokenId,fromTs,untilTs);const receipt=await tx.wait();notify(`📜 Certificate confirmed on Block #${receipt.blockNumber}`,'success');closeModal('cert-modal');}
-  catch(e){notify('❌ '+e.message.slice(0,100),'error');console.error(e);}
+
+  try{
+    const tx = await compliance.addCertificate(
+      name,
+      authority,
+      standard,
+      tokenId,
+      fromTs,
+      untilTs
+    );
+
+    const receipt = await tx.wait();
+    await syncFromChain();
+    updateAll();
+
+    notify(`📜 Certificate confirmed on Block #${receipt.blockNumber}`,'success');
+
+    closeModal('cert-modal');
+  }
+  catch(e){
+    notify('❌ '+e.message.slice(0,100),'error');
+    console.error(e);
+  }
 }
 
 function updateAll(){
-  document.getElementById('stat-total').textContent=products.length;
-  document.getElementById('stat-verified').textContent=products.filter(p=>p.verified).length;
-  document.getElementById('stat-txns').textContent=transactions.length;
-  document.getElementById('cnt-all').textContent=products.length;
-  document.getElementById('cnt-verified').textContent=products.filter(p=>p.verified).length;
-  document.getElementById('cnt-pending').textContent=certs.filter(c=>c.status==='pending').length;
-  document.getElementById('comp-total').textContent=certs.length;
-  ['farm','processing','distribution','retail'].forEach(s=>document.getElementById('cnt-'+s).textContent=products.filter(p=>p.status===s).length);
-  const hasFSSAI=certs.some(c=>c.standard==='FSSAI'&&c.status==='active'),hasISO=certs.some(c=>c.standard==='ISO 22000'&&c.status==='active');
-  document.getElementById('comp-fssai').textContent=hasFSSAI?'Active':'—';document.getElementById('comp-fssai').style.color=hasFSSAI?'#4ade80':'rgba(255,255,255,.4)';
-  document.getElementById('comp-iso').textContent=hasISO?'Certified':'—';document.getElementById('comp-iso').style.color=hasISO?'#4ade80':'rgba(255,255,255,.4)';
-  renderChainViz();renderRecentTxns();renderLedger();renderCertList();renderTraceList(products);updateCertProductSelect();
+  document.getElementById('stat-total').textContent = products.length;
+  const verifiedCount = products.filter(p => p.verified).length;
+
+  document.getElementById('stat-verified').textContent = verifiedCount;
+  document.getElementById('stat-txns').textContent = transactions.length;
+
+  document.getElementById('cnt-all').textContent = products.length;
+  document.getElementById('cnt-verified').textContent = verifiedCount;
+  document.getElementById('cnt-pending').textContent =
+    certs.filter(c => c.revoked).length;
+
+  document.getElementById('comp-total').textContent = certs.length;
+
+  ['farm','processing','distribution','retail'].forEach(s =>
+    document.getElementById('cnt-'+s).textContent =
+      products.filter(p => p.status === s).length
+  );
+  const hasFSSAI = certs.some(c => c.standard==='FSSAI' && !c.revoked);
+  const hasISO = certs.some(c => c.standard==='ISO 22000' && !c.revoked);
+
+  document.getElementById('comp-fssai').textContent = hasFSSAI ? 'Active' : '—';
+  document.getElementById('comp-fssai').style.color = hasFSSAI ? '#4ade80' : 'rgba(255,255,255,.4)';
+
+  document.getElementById('comp-iso').textContent = hasISO ? 'Certified' : '—';
+  document.getElementById('comp-iso').style.color = hasISO ? '#4ade80' : 'rgba(255,255,255,.4)';
+
+  renderChainViz();
+  renderRecentTxns();
+  renderLedger();
+  renderCertList();
+  renderTraceList(products);
+  updateCertProductSelect();
 }
 
 function renderChainViz(){const viz=document.getElementById('chain-viz');if(!blockchain.length)return;viz.innerHTML='';[...blockchain].sort((a,b)=>a.index-b.index).forEach((b,i)=>{if(i>0)viz.insertAdjacentHTML('beforeend','<div class="chain-arrow">⛓</div>');viz.insertAdjacentHTML('beforeend',`<div class="block-mini ${i===0?'genesis':''}" onclick="inspectBlock(${i})"><div class="block-num">BLOCK #${b.index} ${i===0?'(Genesis)':''}</div><div class="block-hash-mini">${shortHash(b.hash)}</div><div class="block-tx">${b.txCount} tx · ${new Date(b.timestamp).toLocaleDateString()}</div></div>`);});}
 function renderRecentTxns(){const tbody=document.getElementById('recent-txns'),list=[...transactions].reverse().slice(0,6);tbody.innerHTML=list.length?list.map(t=>`<tr><td><span class="hash">${shortHash(t.hash)}</span></td><td style="font-weight:500">${t.product.split('—')[1]?.trim()||t.product}</td><td><span class="badge ${actionBadge(t.action)}">${t.action}</span></td><td style="font-size:12px;color:rgba(255,255,255,.5)">${shortHash(t.from)}</td><td>${stageBadge(t.stage)}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${t.time}</td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,.25);padding:1.5rem">No transactions yet</td></tr>';}
 function renderLedger(){const tbody=document.getElementById('ledger-body'),list=[...transactions].reverse();tbody.innerHTML=list.length?list.map(t=>`<tr><td style="font:500 12px var(--mono);color:rgba(255,255,255,.4)">#${t.block}</td><td><span class="hash">${shortHash(t.hash)}</span></td><td style="font-size:12px;color:rgba(255,255,255,.5)">${shortHash(t.from)}</td><td><span class="badge ${actionBadge(t.action)}" style="font-size:10px">${t.action}</span></td><td style="font-size:13px">${t.product}</td><td style="font-size:12px;color:rgba(255,255,255,.4)">${t.time}</td><td><span class="badge badge-green">Confirmed</span></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.25);padding:1.5rem">No transactions yet</td></tr>';}
-function renderCertList(){const el=document.getElementById('cert-list');if(!certs.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div>No certificates yet.</div>';return;}el.innerHTML=certs.map(c=>`<div class="cert-card"><div class="cert-icon" style="background:rgba(96,165,250,.1);color:#60a5fa">${stdIcon(c.standard)}</div><div><div class="cert-name">${c.name}</div><div class="cert-meta">${c.authority} · Valid: ${c.from} → ${c.until}</div><div class="cert-meta" style="margin-top:4px">Product: ${c.product} · <span class="hash">${shortHash(c.hash)}</span></div></div><div class="cert-actions"><span class="badge ${c.status==='active'?'badge-green':'badge-amber'}">${c.status}</span></div></div>`).join('');}
+function renderCertList(){const el=document.getElementById('cert-list');if(!certs.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div>No certificates yet.</div>';return;}el.innerHTML=certs.map(c=>`<div class="cert-card"><div class="cert-icon" style="background:rgba(96,165,250,.1);color:#60a5fa">${stdIcon(c.standard)}</div><div><div class="cert-name">${c.name}</div><div class="cert-meta">${c.authority} · Valid: ${c.validFromStr} → ${c.validUntilStr}</div><div class="cert-meta" style="margin-top:4px">Product: ${c.product} · <span class="hash">${shortHash(c.hash)}</span></div></div><div class="cert-actions"><span class="badge ${c.status==='active'?'badge-green':'badge-amber'}">${c.status}</span></div></div>`).join('');}
 function renderTraceList(list){const el=document.getElementById('trace-product-list');if(!list.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div>No products found. Register one first.</div>';return;}el.innerHTML=list.map(p=>`<div class="card" style="cursor:pointer;transition:border .2s" onmouseover="this.style.borderColor='rgba(22,163,74,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'" onclick="openJourney('${p.id}')"><div style="display:flex;align-items:center;gap:14px"><div style="font-size:28px">${catIcon(p.category)}</div><div style="flex:1"><div style="font:600 15px var(--font);color:#fff;margin-bottom:3px">${p.name}</div><div style="font-size:12px;color:rgba(255,255,255,.4)">${p.origin} · Batch: ${p.quantity} · Harvest: ${p.harvestDate}</div><div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><span class="hash">${p.id}</span><span class="hash">${shortHash(p.checkpoints[0]?.hash||'—')}</span>${stageBadge(p.status)}${p.verified?'<span class="badge badge-green">✓ Verified</span>':''}</div></div><div style="font-size:12px;color:rgba(255,255,255,.3);text-align:right"><div>${p.checkpoints.length} checkpoints</div><div style="margin-top:4px">Expires: ${p.expiryDate}</div><div style="margin-top:8px;color:var(--green-400);font-size:13px">View Journey →</div></div></div></div>`).join('');}
 
 function openJourney(id){
@@ -740,7 +901,10 @@ function updateConfig(){CONFIG.foodTokenAddr=document.getElementById('addr-foodt
 async function saveAndConnect(){updateConfig();await connectGanache();}
 function notify(msg,type='success'){const el=document.getElementById('notification');el.textContent=msg;el.style.background=type==='error'?'#b91c1c':'#15803d';el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),4000);}
 function shortHash(h){return h&&h!=='—'?h.slice(0,8)+'…'+h.slice(-4):'—';}
-function tsToDate(ts){return ts>0?new Date(ts*1000).toISOString().split('T')[0]:'—';}
+function tsToDate(ts){
+  if(!ts) return '—';
+  return new Date(ts * 1000).toLocaleDateString('en-IN');
+}
 function tsToTime(ts){return ts>0?new Date(ts*1000).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}):'—';}
 function stageBadge(s){const m={farm:'badge-green',processing:'badge-blue',distribution:'badge-amber',retail:'badge-purple','—':'badge-blue'},l={farm:'🌾 Farm',processing:'🏭 Processing',distribution:'🚛 Distribution',retail:'🏪 Retail'};return`<span class="badge ${m[s]||'badge-blue'}">${l[s]||s}</span>`;}
 function actionBadge(a){return{REGISTER_PRODUCT:'badge-green',UPDATE_STAGE:'badge-blue',ADD_CERTIFICATE:'badge-purple'}[a]||'badge-blue';}
