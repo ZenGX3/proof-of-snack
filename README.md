@@ -3,18 +3,32 @@
 The global food supply chain faces challenges including food safety concerns, traceability issues, and inefficiencies. Traditional paper-based 
 methods are prone to errors, making it difficult to trace contamination sources or ensure product authenticity. 
 
-**Proof of Snack** is a blockchain-based food supply chain management system that leverages decentralized ledger technology to provide secure, transparent, and traceable tracking of food products from farm to fork.
+Our project is a blockchain-based food supply chain management system that uses a decentralized ledger to provide secure, transparent, traceable and immutable tracking of food products from farm to fork.
 
-## Major Features
+## Sections
 
-### 1. Blockchain Integration (Tokenization)
-We integrate blockchain technology to create a decentralized and tamper-proof ledger. Every new batch of food is registered as an ERC721 Non-Fungible Token (NFT) via the `FoodToken.sol` smart contract [cite: 12, 13]. This token stores immutable product metadata such as origin, category, batch size, harvest date, and expiry date [cite: 14, 15, 16].
+[Go to Features](#features)
+[Usage](#usage)
+
+## Features
+
+### Tokenization
+We integrate NFT's to create a decentralized and tamper-proof ledger. Every new batch of food is registered as an ERC721 Non-Fungible Token
+ via the `FoodToken.sol` smart contract. This token stores immutable product metadata such as origin, category, batch size, harvest date, and expiry date.
+
+ERC721 is a standard for ethereum blockchain that has a unique identifier and contract address to make then unique.
+They have metadata stored in `tokenURI`. They also have build in owner tracking ie ownerOf approve etc.
+
 
 ### 2. End-to-End Product Traceability
-The `SupplyChain.sol` contract enables seamless tracking of the food journey. It records discrete checkpoints across four main stages: Farm, Processing, Distribution, and Retail [cite: 26]. Stakeholders log the location, handler address, and critical conditions like storage temperature [cite: 27]. The system includes automated safety mechanisms, such as emitting a `ContaminationAlert` if recorded temperatures fall outside safe thresholds [cite: 30, 31, 32].
+The `SupplyChain.sol` contract enables seamless tracking of the food journey. 
+It records discrete checkpoints across four main stages: Farm, Processing, Distribution, and Retail. 
+Stakeholders log the location, handler address, and critical conditions like storage temperature. 
+The system also includes automated safety mechanisms, such as emitting a `ContaminationAlert` if recorded temperatures fall outside safe thresholds.
 
 ### 3. Compliance and Certification Registry
-To ensure adherence to food safety regulations, the `ComplianceRegistry.sol` contract records third-party approvals and standards (e.g., FSSAI, ISO 22000, Organic India) [cite: 1, 2]. Certificates are stored with issuing authority details and validity periods [cite: 2]. A product's compliance can be instantly verified on-chain by checking if its associated certificates are active and unrevoked [cite: 10, 11].
+To ensure adherence to food safety regulations, the `ComplianceRegistry.sol` contract records third-party approvals and standards (e.g., FSSAI, ISO 22000, Organic India). 
+Certificates are stored with issuing authority details and validity periods. A product's compliance can be instantly verified on-chain by checking if its associated certificates are active and unrevoked.
 
 ### 4. Interactive Decentralized Application (dApp) Frontend
 A single-page HTML/JS frontend provides an intuitive interface for interacting with the smart contracts. It features:
@@ -24,7 +38,7 @@ A single-page HTML/JS frontend provides an intuitive interface for interacting w
 
 ---
 
-## Step-by-Step Usage Guide
+## Usage
 
 ### Prerequisites
 * **Ganache:** For running a local Ethereum blockchain.
