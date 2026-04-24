@@ -17,15 +17,20 @@
 body{font-family:var(--font);background:var(--slate-900);color:#fff;min-height:100vh;overflow-x:hidden}
 
 /* Header */
-header{background:var(--slate-900);border-bottom:1px solid rgba(255,255,255,.07);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100}
-.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:#fff}
+header{background:var(--slate-900);border-bottom:1px solid rgba(255,255,255,.07);padding:0 2rem;display:flex;align-items:center;justify-content:flex-start;gap:12px;height:64px;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:#fff;flex-shrink:0}
 .logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#16a34a,#4ade80);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
 .logo span{color:var(--green-400)}
-.nav-tabs{display:flex;gap:4px;background:rgba(255,255,255,.06);padding:4px;border-radius:10px}
-.nav-tab{padding:4px 16px;border-radius:7px;border:none;font:500 13px var(--font);cursor:pointer;color:rgba(255,255,255,.55);background:transparent;transition:all .18s}
+.nav-tabs{display:flex;gap:0;background:rgba(255,255,255,.06);padding:4px;border-radius:10px;flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{padding:4px 16px;border-radius:7px;border:none;font:500 13px var(--font);cursor:pointer;color:rgba(255,255,255,.55);background:transparent;transition:all .18s;flex-shrink:0;margin-right:4px}
+.nav-tabs .nav-tab:last-child{margin-right:0}
+.nav-tabs:not(.admin-visible) .nav-tab[data-page="setup"]{margin-right:0}
 .nav-tab.active{background:var(--green-600);color:#fff}
 .nav-tab:hover:not(.active){background:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
-.header-right{display:flex;align-items:center;gap:12px}
+#nav-admin-minters{width:0;min-width:0;opacity:0;transform:translateX(-6px) scale(.95);padding-left:0;padding-right:0;margin-right:0;overflow:hidden;pointer-events:none;transition:width .5s ease-in-out,opacity .5s ease-in-out,transform .5s ease-in-out,padding .5s ease-in-out}
+#nav-admin-minters.show{width:112px;opacity:1;transform:translateX(0) scale(1);padding-left:16px;padding-right:16px;margin-right:4px;pointer-events:auto}
+.header-right{display:flex;align-items:center;gap:12px;flex-shrink:0;margin-left:auto}
 .chain-badge{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);color:var(--green-400);font:500 12px var(--mono);padding:4px 12px;border-radius:20px;display:flex;align-items:center;gap:6px}
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
 
@@ -66,6 +71,8 @@ header{background:var(--slate-900);border-bottom:1px solid rgba(255,255,255,.07)
 .btn-ghost{background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.12)}
 .btn-ghost:hover{background:rgba(255,255,255,.12);color:#fff}
 .btn-sm{padding:5px 12px;font-size:12px}
+.profile-action-btn{transition:transform .16s ease,background .16s ease,border-color .16s ease,color .16s ease}
+.profile-action-btn:hover{transform:translateX(3px);background:rgba(22,163,74,.12);border-color:rgba(74,222,128,.3);color:#d1fae5}
 
 /* Cards */
 .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:16px}
@@ -179,6 +186,15 @@ textarea{resize:vertical;min-height:80px}
 .info-row{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start}
 .info-key{font:500 12px var(--font);color:rgba(255,255,255,.4);min-width:130px;flex-shrink:0;padding-top:1px}
 .info-val{font-size:13px;color:rgba(255,255,255,.8);word-break:break-all}
+.account-row{cursor:pointer;padding:8px 10px;border-radius:8px;border:1px solid transparent;transition:transform .16s ease,background .16s ease,border-color .16s ease}
+.account-row:hover{transform:translateX(4px);background:rgba(22,163,74,.08);border-color:rgba(74,222,128,.25)}
+.admin-minter-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:170px}
+.revoke-minter-btn{max-width:0;opacity:0;transform:translateX(8px);pointer-events:none;padding-left:0;padding-right:0;overflow:hidden;transition:max-width .25s ease,opacity .25s ease,transform .25s ease,padding .25s ease}
+.admin-minter-row.minter:hover .revoke-minter-btn{max-width:120px;opacity:1;transform:translateX(0);pointer-events:auto;padding-left:12px;padding-right:12px}
+.btn-ghost-red{background:rgba(248,113,113,.09);color:#fca5a5;border:1px solid rgba(248,113,113,.25)}
+.btn-ghost-red:hover{background:rgba(248,113,113,.16);color:#fee2e2;border-color:rgba(248,113,113,.4)}
+.account-active-pill{margin-left:0;opacity:0;transform:translateX(-6px) scale(.95);max-width:0;overflow:hidden;white-space:nowrap;padding:0;border-width:0;transition:all .5s ease-in-out}
+.account-active-pill.show{margin-left:6px;opacity:1;transform:translateX(0) scale(1);max-width:70px;padding:3px 10px;border-width:1px}
 .step-num{width:32px;height:32px;border-radius:50%;background:var(--green-600);color:#fff;display:flex;align-items:center;justify-content:center;font:700 15px var(--font);flex-shrink:0}
 @media(max-width:900px){.stats-grid{grid-template-columns:1fr 1fr}.sidebar{width:240px}.form-grid{grid-template-columns:1fr}}
 </style>
@@ -191,12 +207,13 @@ textarea{resize:vertical;min-height:80px}
     Proof Of <span>Snack</span>
   </div>
   <nav class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
-    <button class="nav-tab" onclick="showPage('register')">Register Product</button>
-    <button class="nav-tab" onclick="showPage('trace')">Trace &amp; Track</button>
-    <button class="nav-tab" onclick="showPage('compliance')">Compliance</button>
-    <button class="nav-tab" onclick="showPage('ledger')">Ledger</button>
-    <button class="nav-tab" onclick="showPage('setup')">⚙ Setup</button>
+    <button class="nav-tab active" data-page="dashboard" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-tab" data-page="register" onclick="showPage('register')">Register Product</button>
+    <button class="nav-tab" data-page="trace" onclick="showPage('trace')">Trace &amp; Track</button>
+    <button class="nav-tab" data-page="compliance" onclick="showPage('compliance')">Compliance</button>
+    <button class="nav-tab" data-page="ledger" onclick="showPage('ledger')">Ledger</button>
+    <button class="nav-tab" data-page="setup" onclick="showPage('setup')">⚙ Setup</button>
+    <button class="nav-tab" data-page="admin-minters" id="nav-admin-minters" onclick="showPage('admin-minters')">Add Minter</button>
   </nav>
   <div class="header-right">
     <div class="chain-badge" id="block-counter">
@@ -409,6 +426,23 @@ textarea{resize:vertical;min-height:80px}
       </div>
     </div>
 
+    <!-- ADMIN -->
+    <div class="page" id="page-admin-minters">
+      <div class="section-header">
+        <div class="section-title">👑 Admin Controls — Minter Management</div>
+      </div>
+      <div class="card" style="background:rgba(139,92,246,.06);border-color:rgba(139,92,246,.25)">
+        <div style="font-size:13px;color:rgba(255,255,255,.65);line-height:1.7">
+          Only <b style="color:#fff">Admin</b> accounts can assign <b style="color:#fff">MINTER_ROLE</b>.
+          Changes update instantly for all pages and account views.
+        </div>
+      </div>
+      <div class="card">
+        <div style="font:600 14px var(--font);color:#fff;margin-bottom:12px">Available Accounts</div>
+        <div id="admin-minter-list"></div>
+      </div>
+    </div>
+
     <!-- SETUP -->
     <div class="page" id="page-setup">
       <div class="section-header"><div class="section-title">⚙ Ganache + Remix Setup</div></div>
@@ -457,6 +491,15 @@ textarea{resize:vertical;min-height:80px}
       <div class="card" style="border-color:rgba(22,163,74,.3)">
         <div style="font:600 15px var(--font);color:#fff;margin-bottom:1rem">📋 Paste Contract Addresses</div>
         <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
+          <div class="form-group">
+            <label>Deployment Profile</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="deployment-profile" onchange="selectProfile(this.value)"></select>
+              <button class="btn btn-ghost btn-sm profile-action-btn" onclick="saveCurrentAsNewProfile()" type="button">Save New</button>
+              <button class="btn btn-ghost btn-sm profile-action-btn" onclick="editActiveProfileName()" type="button">Edit</button>
+              <button class="btn btn-ghost btn-sm profile-action-btn" onclick="deleteActiveProfile()" type="button">Delete</button>
+            </div>
+          </div>
           <div class="form-group"><label>FoodToken.sol address</label><input type="text" id="addr-foodtoken" placeholder="0x..." oninput="updateConfig()" /></div>
           <div class="form-group"><label>SupplyChain.sol address</label><input type="text" id="addr-supplychain" placeholder="0x..." oninput="updateConfig()" /></div>
           <div class="form-group"><label>ComplianceRegistry.sol address</label><input type="text" id="addr-compliance" placeholder="0x..." oninput="updateConfig()" /></div>
@@ -503,17 +546,43 @@ textarea{resize:vertical;min-height:80px}
   </div>
 </div>
 
+<!-- Edit Profile Name Modal -->
+<div class="modal-overlay" id="profile-name-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Edit Profile Name</div>
+      <button class="modal-close" onclick="closeModal('profile-name-modal')">✕</button>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Profile Name</label>
+      <input type="text" id="profile-name-input" placeholder="e.g. CrazySheep-2156" />
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('profile-name-modal')" type="button">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmProfileNameEdit()" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
 <div id="notification"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <script>
 const CONFIG={rpcUrl:'http://127.0.0.1:7545',foodTokenAddr:'',supplyChainAddr:'',complianceAddr:''};
+const CONFIG_STORAGE_KEY='proofOfSnackConfigV1';
+const CONFIG_TTL_MS=20*60*1000;
+const PROFILE_STORAGE_KEY='proofOfSnackProfilesV1';
+const PROFILE_ACTIVE_KEY='proofOfSnackActiveProfileV1';
 const FOOD_TOKEN_ABI = [
   "function registerProduct(address to, string name, string category, string origin, uint256 quantity, uint256 harvestDate, uint256 expiryDate, string notes) returns (uint256)",
   "function products(uint256) view returns (string name,string category,string origin,uint256 quantity,uint256 harvestDate,uint256 expiryDate,string notes,address registeredBy,uint256 timestamp)",
   "function totalSupply() view returns (uint256)",
   "function hasRole(bytes32 role, address account) view returns (bool)",
-  "event ProductRegistered(uint256 indexed tokenId, string name, address registeredBy)"
+  "function grantRole(bytes32 role, address account)",
+  "function revokeRole(bytes32 role, address account)",
+  "event ProductRegistered(uint256 indexed tokenId, string name, address registeredBy)",
+  "event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)",
+  "event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)"
 ];
 const SUPPLY_CHAIN_ABI=["function addCheckpoint(uint256 tokenId, uint8 stage, string location, int256 temperature, string notes)","function getCheckpoints(uint256 tokenId) view returns (tuple(uint8 stage,string location,int256 temperature,address handler,string notes,uint256 recordedAt)[])","function currentStage(uint256) view returns (uint8)","event CheckpointAdded(uint256 indexed tokenId, uint8 stage, address handler, string location)","event ContaminationAlert(uint256 indexed tokenId, string reason)"];
 const COMPLIANCE_ABI=["function addCertificate(string name, string authority, string standard, uint256 tokenId, uint256 validFrom, uint256 validUntil) returns (uint256)","function certificates(uint256) view returns (string name,string authority,string standard,uint256 tokenId,uint256 validFrom,uint256 validUntil,address issuedBy,bool revoked)","function isCompliant(uint256 tokenId) view returns (bool)","function getCertCount() view returns (uint256)","event CertificateAdded(uint256 indexed certId, uint256 tokenId, string standard)"];
@@ -521,16 +590,19 @@ const COMPLIANCE_ABI=["function addCertificate(string name, string authority, st
 let provider,signer,accounts=[];
 let foodToken,supplyChain,compliance,connected=false;
 let products=[],transactions=[],certs=[],blockchain=[],currentProductId=null;
+let activeAccountIndex=0;
+let deploymentProfiles=[];
+let activeProfileId='';
+let profileBeingEditedId='';
 const STAGE_NAMES=['farm','processing','distribution','retail'];
 const STAGE_LABELS=['🌾 Farm','🏭 Processing','🚛 Distribution','🏪 Retail'];
 const STAGE_EMOJI=['🌾','🏭','🚛','🏪'];
+const DEFAULT_ADMIN_ROLE = '0x0000000000000000000000000000000000000000000000000000000000000000';
+const MINTER_ROLE = '0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6';
 
 async function getAccountRole(address){
   try{
     if(!foodToken) return "Unknown";
-
-    const DEFAULT_ADMIN_ROLE = '0x0000000000000000000000000000000000000000000000000000000000000000';
-    const MINTER_ROLE = '0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6';
 
     // 🔥 IMPORTANT: ensure address is string
     const addr = typeof address === 'string' ? address : address.address;
@@ -558,6 +630,152 @@ function getRoleClass(role){
   return 'badge badge-viewer';
 }
 
+function switchAccount(index){
+  const pills = Array.from(document.querySelectorAll('#accounts-list .account-active-pill'));
+  const current = document.querySelector('#accounts-list .account-active-pill.show');
+  const next = pills[index];
+
+  if(current && current !== next){
+    current.classList.remove('show');
+  }
+  if(next && !next.classList.contains('show')){
+    requestAnimationFrame(() => next.classList.add('show'));
+  }
+
+  connectGanache(index);
+}
+
+function isAdminRole(roleName){
+  return roleName === 'Admin' || roleName === 'Admin + Minter';
+}
+
+function isMinterRole(roleName){
+  return roleName === 'Minter' || roleName === 'Admin + Minter';
+}
+
+function setAdminNavVisible(visible){
+  const adminNav = document.getElementById('nav-admin-minters');
+  const navTabs = document.querySelector('.nav-tabs');
+  if(!adminNav || !navTabs) return;
+  adminNav.classList.toggle('show', visible);
+  navTabs.classList.toggle('admin-visible', visible);
+}
+
+async function refreshRoleViews(){
+  if(!connected || !foodToken || !signer || !accounts.length) return;
+
+  const roles = await Promise.all(
+    accounts.map(async (a) => ({
+      address: a.address,
+      roleName: await getAccountRole(a.address)
+    }))
+  );
+
+  document.getElementById('accounts-list').innerHTML =
+    roles.map((r,i)=>{
+      const roleClass = getRoleClass(r.roleName);
+      return `
+        <div class="info-row account-row" onclick="switchAccount(${i})">
+          <div class="info-key" style="min-width:80px">Account ${i}</div>
+          <div class="info-val">
+            <span class="hash" style="font-size:11px">${r.address}</span>
+            <span class="${roleClass}" style="margin-left:8px">${r.roleName}</span>
+            <span class="badge badge-green account-active-pill ${i===activeAccountIndex?'show':''}">active</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  const activeAddress = await signer.getAddress();
+  const activeRole = roles[activeAccountIndex]?.roleName || await getAccountRole(activeAddress);
+  const activeRoleClass = getRoleClass(activeRole);
+
+  document.getElementById('current-account').innerHTML = `
+    Active: <span class="hash">${activeAddress}</span>
+    <span class="${activeRoleClass}" style="margin-left:6px">${activeRole}</span>
+  `;
+
+  const canAdmin = isAdminRole(activeRole);
+  setAdminNavVisible(canAdmin);
+  renderAdminMinterList(roles, canAdmin);
+
+  if(!canAdmin && document.getElementById('page-admin-minters').classList.contains('active')){
+    showPage('dashboard');
+  }
+}
+
+function renderAdminMinterList(roles, canAdmin){
+  const el = document.getElementById('admin-minter-list');
+  if(!el) return;
+
+  if(!connected){
+    el.innerHTML = '<div class="empty-state" style="padding:1.5rem">Connect to Ganache to manage minter roles.</div>';
+    return;
+  }
+  if(!canAdmin){
+    el.innerHTML = '<div class="empty-state" style="padding:1.5rem">Only Admin accounts can manage minters.</div>';
+    return;
+  }
+
+  el.innerHTML = roles.map((r,i)=>{
+    const roleClass = getRoleClass(r.roleName);
+    const minter = isMinterRole(r.roleName);
+    const pureMinter = r.roleName === 'Minter';
+    return `
+      <div class="info-row account-row admin-minter-row ${pureMinter?'minter':''}" style="justify-content:space-between;align-items:center">
+        <div style="display:flex;gap:10px;align-items:center;min-width:0;flex:1">
+          <span style="font:500 12px var(--font);color:rgba(255,255,255,.55);min-width:70px">Account ${i}</span>
+          <span class="hash" style="font-size:11px">${r.address}</span>
+          <span class="${roleClass}">${r.roleName}</span>
+        </div>
+        <div class="admin-minter-actions">
+          ${minter ? '<span class="badge badge-green">Already Minter</span>' : ''}
+          ${!minter ? `<button class="btn btn-primary btn-sm" onclick="grantMinterRole('${r.address}')">+ Add Minter</button>` : ''}
+          ${pureMinter ? `<button class="btn btn-ghost btn-sm btn-ghost-red revoke-minter-btn" onclick="revokeMinterRole('${r.address}')">Revoke</button>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function grantMinterRole(account){
+  if(!connected){notify('⚠ Connect to Ganache first','error');return;}
+  try{
+    const caller = await signer.getAddress();
+    const canAdmin = await foodToken.hasRole(DEFAULT_ADMIN_ROLE, caller);
+    if(!canAdmin){
+      notify('🚫 Only admin can add minters','error');
+      return;
+    }
+    notify('⛏ Granting MINTER role…','success');
+    const tx = await foodToken.grantRole(MINTER_ROLE, account);
+    await tx.wait();
+    await refreshRoleViews();
+    notify('✅ Minter role granted','success');
+  }catch(e){
+    notify('❌ '+(e.shortMessage||e.message||'Grant role failed').slice(0,90),'error');
+  }
+}
+
+async function revokeMinterRole(account){
+  if(!connected){notify('⚠ Connect to Ganache first','error');return;}
+  try{
+    const caller = await signer.getAddress();
+    const canAdmin = await foodToken.hasRole(DEFAULT_ADMIN_ROLE, caller);
+    if(!canAdmin){
+      notify('🚫 Only admin can revoke minters','error');
+      return;
+    }
+    notify('⛏ Revoking MINTER role…','success');
+    const tx = await foodToken.revokeRole(MINTER_ROLE, account);
+    await tx.wait();
+    await refreshRoleViews();
+    notify('✅ Minter role revoked','success');
+  }catch(e){
+    notify('❌ '+(e.shortMessage||e.message||'Revoke role failed').slice(0,90),'error');
+  }
+}
+
 async function connectGanache(index = 0){
   if(!CONFIG.foodTokenAddr){
     notify('⚠ Paste contract addresses in the Setup tab first','error');
@@ -578,7 +796,9 @@ async function connectGanache(index = 0){
       address: await s.getAddress()
     })));
 
-    signer = accounts[index].signer;
+    const safeIndex = Number.isInteger(index) && index >= 0 && index < accounts.length ? index : 0;
+    activeAccountIndex = safeIndex;
+    signer = accounts[safeIndex].signer;
 
     // ✅ INIT CONTRACTS FIRST
     foodToken = new ethers.Contract(CONFIG.foodTokenAddr,FOOD_TOKEN_ABI,signer);
@@ -592,11 +812,6 @@ async function connectGanache(index = 0){
       return;
     }
 
-    // ✅ ACTIVE ACCOUNT ROLE
-    const addr = accounts[index].address;
-    const role = await getAccountRole(addr);
-    const roleClass = getRoleClass(role);
-
     let el = document.getElementById('current-account');
     if(!el){
       const div = document.createElement('div');
@@ -608,38 +823,17 @@ async function connectGanache(index = 0){
       el = div;
     }
 
-    el.innerHTML = `
-      Active: <span class="hash">${addr}</span>
-      <span class="${roleClass}" style="margin-left:6px">${role}</span>
-    `;
-
     await syncFromChain();
     listenToEvents();
-
     connected = true;
-    setConnectState('connected');
+    await refreshRoleViews();
 
-    notify(`✅ Connected as Account ${index}`,'success');
+    setConnectState('connected');
+    persistConfig();
+
+    notify(`✅ Connected as Account ${safeIndex}`,'success');
 
     document.getElementById('accounts-card').style.display='block';
-
-    // ✅ ACCOUNT LIST WITH ROLES
-    document.getElementById('accounts-list').innerHTML =
-      await Promise.all(accounts.map(async (a,i)=>{
-        const role = await getAccountRole(a.address);
-        const roleClass = getRoleClass(role);
-
-        return `
-          <div class="info-row" style="cursor:pointer" onclick="connectGanache(${i})">
-            <div class="info-key" style="min-width:80px">Account ${i}</div>
-            <div class="info-val">
-              <span class="hash" style="font-size:11px">${a.address}</span>
-              <span class="${roleClass}" style="margin-left:8px">${role}</span>
-              ${i===index?'<span class="badge badge-green" style="margin-left:6px">active</span>':''}
-            </div>
-          </div>
-        `;
-      })).then(r=>r.join(''));
 
     setInterval(async()=>{
       try{
@@ -827,64 +1021,13 @@ function listenToEvents(){
   foodToken.on('ProductRegistered',async(tokenId,name,registeredBy,event)=>{await loadProduct(Number(tokenId),event);const b=await event.getBlock();if(!blockchain.find(x=>x.index===b.number))blockchain.push(formatBlock(b));updateAll();notify('🌿 New product minted: '+name,'success');});
   foodToken.on('RoleGranted', async (role, account, sender) => {
     notify('🔑 Role updated','success');
-
-    // 🔥 refresh account list
-    document.getElementById('accounts-list').innerHTML =
-      await Promise.all(accounts.map(async (a,i)=>{
-        const roleName = await getAccountRole(a.address);
-        const roleClass = getRoleClass(roleName);
-
-        return `
-          <div class="info-row" style="cursor:pointer" onclick="connectGanache(${i})">
-            <div class="info-key" style="min-width:80px">Account ${i}</div>
-            <div class="info-val">
-              <span class="hash" style="font-size:11px">${a.address}</span>
-              <span class="${roleClass}" style="margin-left:8px">${roleName}</span>
-            </div>
-          </div>
-        `;
-      })).then(r=>r.join(''));
-
-    // 🔥 refresh current account role
-    const addr = await signer.getAddress();
-    const roleName = await getAccountRole(addr);
-    const roleClass = getRoleClass(roleName);
-
-    document.getElementById('current-account').innerHTML = `
-      Active: <span class="hash">${addr}</span>
-      <span class="${roleClass}" style="margin-left:6px">${roleName}</span>
-    `;
+    await refreshRoleViews();
   });
 
 
   foodToken.on('RoleRevoked', async () => {
     notify('⚠ Role revoked','error');
-
-    // same refresh logic
-    document.getElementById('accounts-list').innerHTML =
-      await Promise.all(accounts.map(async (a,i)=>{
-        const roleName = await getAccountRole(a.address);
-        const roleClass = getRoleClass(roleName);
-
-        return `
-          <div class="info-row" style="cursor:pointer" onclick="connectGanache(${i})">
-            <div class="info-key" style="min-width:80px">Account ${i}</div>
-            <div class="info-val">
-              <span class="hash" style="font-size:11px">${a.address}</span>
-              <span class="${roleClass}" style="margin-left:8px">${roleName}</span>
-            </div>
-          </div>
-        `;
-      })).then(r=>r.join(''));
-
-    const addr = await signer.getAddress();
-    const roleName = await getAccountRole(addr);
-    const roleClass = getRoleClass(roleName);
-
-    document.getElementById('current-account').innerHTML = `
-      Active: <span class="hash">${addr}</span>
-      <span class="${roleClass}" style="margin-left:6px">${roleName}</span>
-    `;
+    await refreshRoleViews();
   });
   supplyChain.on('CheckpointAdded',async(tokenId,stage,handler,location,event)=>{const id=Number(tokenId);const chks=await supplyChain.getCheckpoints(id);const p=products.find(x=>x.tokenId===id);if(p){p.status=STAGE_NAMES[Number(stage)];p.checkpoints=chks.map(c=>({stage:STAGE_NAMES[Number(c.stage)],stageNum:Number(c.stage),location:c.location,temp:(Number(c.temperature)/10).toFixed(1),handler:c.handler,notes:c.notes,time:new Date(Number(c.recordedAt)*1000).toISOString(),hash:event.transactionHash}));if(Number(stage)===3)p.verified=true;}const b=await event.getBlock();transactions.push({block:b.number,hash:event.transactionHash,from:handler,action:'UPDATE_STAGE',product:p?p.id+' — '+p.name:id,stage:STAGE_NAMES[Number(stage)],time:tsToTime(b.timestamp)});if(!blockchain.find(x=>x.index===b.number))blockchain.push(formatBlock(b));updateAll();if(currentProductId===p?.id)openJourney(p.id);notify('📍 Checkpoint confirmed on chain!','success');});
   supplyChain.on('ContaminationAlert',(tokenId,reason)=>{document.getElementById('alert-contamination').style.display='flex';notify('🚨 CONTAMINATION ALERT Token #'+tokenId+': '+reason,'error');});
@@ -919,32 +1062,8 @@ function listenToEvents(){
       }
     }
 
-    // 🔥 ADD THIS (role auto-refresh)
     if(connected){
-      document.getElementById('accounts-list').innerHTML =
-        await Promise.all(accounts.map(async (a,i)=>{
-          const roleName = await getAccountRole(a.address);
-          const roleClass = getRoleClass(roleName);
-
-          return `
-            <div class="info-row" style="cursor:pointer" onclick="connectGanache(${i})">
-              <div class="info-key" style="min-width:80px">Account ${i}</div>
-              <div class="info-val">
-                <span class="hash" style="font-size:11px">${a.address}</span>
-                <span class="${roleClass}" style="margin-left:8px">${roleName}</span>
-              </div>
-            </div>
-          `;
-        })).then(r=>r.join(''));
-
-      const addr = await signer.getAddress();
-      const roleName = await getAccountRole(addr);
-      const roleClass = getRoleClass(roleName);
-
-      document.getElementById('current-account').innerHTML = `
-        Active: <span class="hash">${addr}</span>
-        <span class="${roleClass}" style="margin-left:6px">${roleName}</span>
-      `;
+      await refreshRoleViews();
     }
   });
 }
@@ -954,9 +1073,15 @@ async function registerProduct(){
   const name=document.getElementById('reg-name').value.trim(),category=document.getElementById('reg-category').value,origin=document.getElementById('reg-origin').value.trim()||'Unknown',quantity=document.getElementById('reg-quantity').value||'100',hDate=document.getElementById('reg-date').value,eDate=document.getElementById('reg-expiry').value,notes=document.getElementById('reg-notes').value.trim()||'None';
   if(!name){notify('⚠ Product name is required','error');return;}if(!hDate){notify('⚠ Harvest date is required','error');return;}
   const harvestTs=Math.floor(new Date(hDate).getTime()/1000),expiryTs=eDate?Math.floor(new Date(eDate).getTime()/1000):harvestTs+86400*365;
+  const activeAddress = await signer.getAddress();
+  const isMinter = await foodToken.hasRole(MINTER_ROLE, activeAddress);
+  if(!isMinter){
+    notify('🚫 You are not the minter, so adding a product is not allowed','error');
+    return;
+  }
   notify('⛏ Sending transaction to Ganache…','success');
   try{
-    const tx=await foodToken.registerProduct(await signer.getAddress(),name,category,origin,parseInt(quantity),harvestTs,expiryTs,notes);
+    const tx=await foodToken.registerProduct(activeAddress,name,category,origin,parseInt(quantity),harvestTs,expiryTs,notes);
     notify('⌛ Waiting for block confirmation…','success');
     const receipt = await tx.wait();
 
@@ -987,11 +1112,12 @@ async function registerProduct(){
     // 🔥 AccessControl detection (robust)
     if(
       msg.includes('accesscontrol') ||
+      msg.includes('accesscontrolunauthorizedaccount') ||
       msg.includes('missing role') ||
       msg.includes('not authorized') ||
       msg.includes('execution reverted')
     ){
-      notify('🚫 You need MINTER role to register products','error');
+      notify('🚫 You are not the minter, so adding a product is not allowed','error');
     }
     else{
       notify('❌ Transaction failed','error');
@@ -1158,18 +1284,226 @@ function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  const idx=['dashboard','register','trace','compliance','ledger','setup'].indexOf(id);
-  document.querySelectorAll('.nav-tab')[idx]?.classList.add('active');
+  document.querySelector(`.nav-tab[data-page="${id}"]`)?.classList.add('active');
   if(id==='trace'){closeJourney();renderTraceList(products);}
+  if(id==='admin-minters'&&connected){refreshRoleViews();}
 }
 function filterProducts(stage,el){document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));el.classList.add('active');showPage('trace');renderTraceList(stage==='all'?products:products.filter(p=>p.status===stage));}
 function traceSearch(q){const lower=q.toLowerCase();renderTraceList(q?products.filter(p=>p.id.toLowerCase().includes(lower)||p.name.toLowerCase().includes(lower)||p.origin.toLowerCase().includes(lower)):products);}
-function inspectBlock(i){const b=[...blockchain].sort((a,x)=>a.index-x.index)[i];document.getElementById('block-modal-content').innerHTML=`<div class="info-row"><div class="info-key">Block Number</div><div class="info-val">#${b.index}</div></div><div class="info-row"><div class="info-key">Block Hash</div><div class="info-val"><span class="hash">${b.hash}</span></div></div><div class="info-row"><div class="info-key">Previous Hash</div><div class="info-val"><span class="hash">${shortHash(b.prevHash)}</span></div></div><div class="info-row"><div class="info-key">Timestamp</div><div class="info-val">${b.timestamp}</div></div><div class="info-row"><div class="info-key">Transactions</div><div class="info-val">${b.txCount}</div></div><div style="margin-top:16px;background:rgba(255,255,255,.04);border-radius:8px;padding:12px;font:400 11px var(--mono);color:rgba(255,255,255,.5);white-space:pre-wrap">${JSON.stringify(b.data,null,2)}</div>`;openModal('block-modal');}
+async function canViewBlockDetails(){
+  if(!connected || !foodToken || !signer) return false;
+  try{
+    const addr = await signer.getAddress();
+    const isAdmin = await foodToken.hasRole(DEFAULT_ADMIN_ROLE, addr);
+    const isMinter = await foodToken.hasRole(MINTER_ROLE, addr);
+    return isAdmin || isMinter;
+  }catch(_){
+    return false;
+  }
+}
+async function inspectBlock(i){
+  const b=[...blockchain].sort((a,x)=>a.index-x.index)[i];
+  if(!b) return;
+
+  let detailSection = '';
+  try{
+    const regEvents = await foodToken.queryFilter(foodToken.filters.ProductRegistered(), b.index, b.index);
+    if(regEvents.length){
+      const privileged = await canViewBlockDetails();
+      if(privileged){
+        const cards = await Promise.all(regEvents.map(async (ev)=>{
+          const tokenId = Number(ev.args.tokenId);
+          const meta = await foodToken.products(tokenId);
+          return `
+            <div style="border:1px solid rgba(74,222,128,.25);background:rgba(22,163,74,.08);border-radius:10px;padding:12px;margin-bottom:10px">
+              <div style="font:600 13px var(--font);color:#4ade80;margin-bottom:8px">Product Registered · Token #${tokenId}</div>
+              <div class="info-row"><div class="info-key">Name</div><div class="info-val">${meta.name}</div></div>
+              <div class="info-row"><div class="info-key">Category</div><div class="info-val">${meta.category}</div></div>
+              <div class="info-row"><div class="info-key">Origin</div><div class="info-val">${meta.origin}</div></div>
+              <div class="info-row"><div class="info-key">Quantity</div><div class="info-val">${meta.quantity.toString()} kg</div></div>
+              <div class="info-row"><div class="info-key">Harvest Date</div><div class="info-val">${tsToDate(Number(meta.harvestDate))}</div></div>
+              <div class="info-row"><div class="info-key">Expiry Date</div><div class="info-val">${tsToDate(Number(meta.expiryDate))}</div></div>
+              <div class="info-row"><div class="info-key">Notes</div><div class="info-val">${meta.notes}</div></div>
+              <div class="info-row"><div class="info-key">Registered By</div><div class="info-val"><span class="hash">${shortHash(ev.args.registeredBy)}</span></div></div>
+              <div class="info-row"><div class="info-key">Tx Hash</div><div class="info-val"><span class="hash">${shortHash(ev.transactionHash)}</span></div></div>
+            </div>
+          `;
+        }));
+        detailSection = `<div style="margin-top:16px;font:600 14px var(--font);color:#fff">🔐 Registered Product Details (Admin/Minter)</div><div style="margin-top:10px">${cards.join('')}</div>`;
+      }else{
+        detailSection = `<div style="margin-top:16px;border:1px solid rgba(251,191,36,.25);background:rgba(251,191,36,.08);border-radius:10px;padding:12px;color:#fbbf24;font-size:13px">🔒 Detailed product registration data in this block is visible only to Admin or Minter accounts.</div>`;
+      }
+    }else{
+      detailSection = `<div style="margin-top:16px;border:1px solid rgba(148,163,184,.25);background:rgba(148,163,184,.08);border-radius:10px;padding:12px;color:#cbd5e1;font-size:13px">ℹ This block has no product registration transaction.</div>`;
+    }
+  }catch(_){
+    detailSection = `<div style="margin-top:16px;border:1px solid rgba(248,113,113,.25);background:rgba(248,113,113,.08);border-radius:10px;padding:12px;color:#f87171;font-size:13px">⚠ Unable to load detailed registration data for this block.</div>`;
+  }
+
+  document.getElementById('block-modal-content').innerHTML=`
+    <div class="info-row"><div class="info-key">Block Number</div><div class="info-val">#${b.index}</div></div>
+    <div class="info-row"><div class="info-key">Block Hash</div><div class="info-val"><span class="hash">${b.hash}</span></div></div>
+    <div class="info-row"><div class="info-key">Previous Hash</div><div class="info-val"><span class="hash">${shortHash(b.prevHash)}</span></div></div>
+    <div class="info-row"><div class="info-key">Timestamp</div><div class="info-val">${b.timestamp}</div></div>
+    <div class="info-row"><div class="info-key">Transactions</div><div class="info-val">${b.txCount}</div></div>
+    <div style="margin-top:16px;background:rgba(255,255,255,.04);border-radius:8px;padding:12px;font:400 11px var(--mono);color:rgba(255,255,255,.5);white-space:pre-wrap">${JSON.stringify(b.data,null,2)}</div>
+    ${detailSection}
+  `;
+  openModal('block-modal');
+}
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function openCertModal(){updateCertProductSelect();openModal('cert-modal');}
 function updateCertProductSelect(){const sel=document.getElementById('cert-product');if(!sel)return;sel.innerHTML='<option value="">All Products</option>'+products.map(p=>`<option value="${p.id}">${p.id} — ${p.name}</option>`).join('');}
-function updateConfig(){CONFIG.foodTokenAddr=document.getElementById('addr-foodtoken').value.trim();CONFIG.supplyChainAddr=document.getElementById('addr-supplychain').value.trim();CONFIG.complianceAddr=document.getElementById('addr-compliance').value.trim();CONFIG.rpcUrl=document.getElementById('addr-rpc').value.trim()||'http://127.0.0.1:7545';}
+function saveProfiles(){
+  localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(deploymentProfiles));
+  localStorage.setItem(PROFILE_ACTIVE_KEY, activeProfileId || '');
+}
+function renderProfileSelect(){
+  const sel=document.getElementById('deployment-profile');
+  if(!sel) return;
+  sel.innerHTML=deploymentProfiles.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  if(activeProfileId) sel.value=activeProfileId;
+}
+function applyProfile(profile){
+  if(!profile) return;
+  activeProfileId=profile.id;
+  CONFIG.foodTokenAddr=profile.foodTokenAddr||'';
+  CONFIG.supplyChainAddr=profile.supplyChainAddr||'';
+  CONFIG.complianceAddr=profile.complianceAddr||'';
+  CONFIG.rpcUrl=profile.rpcUrl||'http://127.0.0.1:7545';
+  document.getElementById('addr-foodtoken').value=CONFIG.foodTokenAddr;
+  document.getElementById('addr-supplychain').value=CONFIG.supplyChainAddr;
+  document.getElementById('addr-compliance').value=CONFIG.complianceAddr;
+  document.getElementById('addr-rpc').value=CONFIG.rpcUrl;
+  renderProfileSelect();
+  persistConfig();
+  saveProfiles();
+}
+function selectProfile(id){
+  const profile=deploymentProfiles.find(p=>p.id===id);
+  if(!profile) return;
+  applyProfile(profile);
+}
+function generateProfileName(){
+  const adjectives=['Crazy','Swift','Bright','Silent','Neon','Shadow','Lucky','Quantum'];
+  const nouns=['Sheep','Falcon','Panda','Tiger','Otter','Fox','Wolf','Llama'];
+  let label='';
+  do{
+    const adj=adjectives[Math.floor(Math.random()*adjectives.length)];
+    const noun=nouns[Math.floor(Math.random()*nouns.length)];
+    const suffix=Math.floor(1000+Math.random()*9000);
+    label=`${adj}${noun}-${suffix}`;
+  }while(deploymentProfiles.some(p=>p.name.toLowerCase()===label.toLowerCase()));
+  return label;
+}
+function saveCurrentAsNewProfile(){
+  updateConfig();
+  const label=generateProfileName();
+  const profile={id:'p-'+Date.now(),name:label,foodTokenAddr:CONFIG.foodTokenAddr,supplyChainAddr:CONFIG.supplyChainAddr,complianceAddr:CONFIG.complianceAddr,rpcUrl:CONFIG.rpcUrl};
+  deploymentProfiles.push(profile);
+  applyProfile(profile);
+  notify(`✅ Deployment profile saved: ${label}`,'success');
+}
+function editActiveProfileName(){
+  const profile=deploymentProfiles.find(p=>p.id===activeProfileId);
+  if(!profile) return;
+  profileBeingEditedId=profile.id;
+  const input=document.getElementById('profile-name-input');
+  input.value=profile.name;
+  openModal('profile-name-modal');
+  setTimeout(()=>input.focus(),0);
+}
+function confirmProfileNameEdit(){
+  const profile=deploymentProfiles.find(p=>p.id===profileBeingEditedId);
+  if(!profile) return;
+  const renamed=(document.getElementById('profile-name-input').value||'').trim();
+  if(!renamed) return;
+  profile.name=renamed;
+  renderProfileSelect();
+  saveProfiles();
+  closeModal('profile-name-modal');
+  notify('✏️ Profile name updated','success');
+}
+function deleteActiveProfile(){
+  if(deploymentProfiles.length<=1){
+    notify('⚠ Keep at least one profile','error');
+    return;
+  }
+  const idx=deploymentProfiles.findIndex(p=>p.id===activeProfileId);
+  if(idx===-1) return;
+  deploymentProfiles.splice(idx,1);
+  applyProfile(deploymentProfiles[Math.max(0,idx-1)]);
+  notify('🗑 Profile deleted','success');
+}
+function initDeploymentProfiles(){
+  const raw=localStorage.getItem(PROFILE_STORAGE_KEY);
+  try{
+    const parsed=raw?JSON.parse(raw):[];
+    deploymentProfiles=Array.isArray(parsed)?parsed.filter(p=>p&&p.id&&p.name):[];
+  }catch(_){
+    deploymentProfiles=[];
+  }
+  if(!deploymentProfiles.length){
+    deploymentProfiles=[{id:'default',name:'Draft Deployment',foodTokenAddr:CONFIG.foodTokenAddr,supplyChainAddr:CONFIG.supplyChainAddr,complianceAddr:CONFIG.complianceAddr,rpcUrl:CONFIG.rpcUrl,isDraft:true}];
+  }
+  const storedActive=localStorage.getItem(PROFILE_ACTIVE_KEY)||'';
+  const preferredId=activeProfileId||storedActive||deploymentProfiles[0].id;
+  const profile=deploymentProfiles.find(p=>p.id===preferredId)||deploymentProfiles[0];
+  applyProfile(profile);
+}
+function persistConfig(){
+  const payload={config:{...CONFIG},accountIndex:activeAccountIndex,profileId:activeProfileId,expiresAt:Date.now()+CONFIG_TTL_MS};
+  localStorage.setItem(CONFIG_STORAGE_KEY,JSON.stringify(payload));
+}
+function loadPersistedConfig(){
+  const raw=localStorage.getItem(CONFIG_STORAGE_KEY);
+  if(!raw) return false;
+  try{
+    const parsed=JSON.parse(raw);
+    if(!parsed?.expiresAt||Date.now()>parsed.expiresAt){
+      localStorage.removeItem(CONFIG_STORAGE_KEY);
+      return false;
+    }
+    const saved=parsed.config||{};
+    CONFIG.foodTokenAddr=saved.foodTokenAddr||'';
+    CONFIG.supplyChainAddr=saved.supplyChainAddr||'';
+    CONFIG.complianceAddr=saved.complianceAddr||'';
+    CONFIG.rpcUrl=saved.rpcUrl||'http://127.0.0.1:7545';
+    activeAccountIndex = Number.isInteger(parsed.accountIndex) ? parsed.accountIndex : 0;
+    activeProfileId = parsed.profileId || '';
+
+    document.getElementById('addr-foodtoken').value=CONFIG.foodTokenAddr;
+    document.getElementById('addr-supplychain').value=CONFIG.supplyChainAddr;
+    document.getElementById('addr-compliance').value=CONFIG.complianceAddr;
+    document.getElementById('addr-rpc').value=CONFIG.rpcUrl;
+    return true;
+  }catch(_){
+    localStorage.removeItem(CONFIG_STORAGE_KEY);
+    return false;
+  }
+}
+function updateConfig(){
+  CONFIG.foodTokenAddr=document.getElementById('addr-foodtoken').value.trim();
+  CONFIG.supplyChainAddr=document.getElementById('addr-supplychain').value.trim();
+  CONFIG.complianceAddr=document.getElementById('addr-compliance').value.trim();
+  CONFIG.rpcUrl=document.getElementById('addr-rpc').value.trim()||'http://127.0.0.1:7545';
+  const profile=deploymentProfiles.find(p=>p.id===activeProfileId);
+  if(profile){
+    profile.foodTokenAddr=CONFIG.foodTokenAddr;
+    profile.supplyChainAddr=CONFIG.supplyChainAddr;
+    profile.complianceAddr=CONFIG.complianceAddr;
+    profile.rpcUrl=CONFIG.rpcUrl;
+    if(profile.isDraft && CONFIG.foodTokenAddr && CONFIG.supplyChainAddr && CONFIG.complianceAddr){
+      profile.isDraft=false;
+      profile.name=generateProfileName();
+      renderProfileSelect();
+      notify(`✅ Deployment auto-saved as ${profile.name}`,'success');
+    }
+    saveProfiles();
+  }
+  persistConfig();
+}
 async function saveAndConnect(){updateConfig();await connectGanache();}
 function notify(msg,type='success'){const el=document.getElementById('notification');el.textContent=msg;el.style.background=type==='error'?'#b91c1c':'#15803d';el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),4000);}
 function shortHash(h){return h&&h!=='—'?h.slice(0,8)+'…'+h.slice(-4):'—';}
@@ -1183,7 +1517,14 @@ function actionBadge(a){return{REGISTER_PRODUCT:'badge-green',UPDATE_STAGE:'badg
 function catIcon(c){return{'Fresh Produce':'🥭','Dairy':'🧀','Meat & Poultry':'🍗','Grains & Cereals':'🌾','Seafood':'🐟','Processed Food':'🥫','Beverages':'🧃'}[c]||'📦';}
 function stdIcon(s){return{'FSSAI':'🏛','ISO 22000':'🔬','HACCP':'⚗','Organic India':'🌿','USDA Organic':'🌱','GlobalG.A.P.':'🌍','Halal':'☪','Kosher':'✡'}[s]||'📜';}
 function qrSvg(){const pat=[1,1,1,0,1,1,1,1,0,1,0,1,0,1,1,0,0,1,0,0,1,1,1,0,0,0,1,0,0,1,1,1,0,1,1,0,0,0,0,1,0,1,1,0,1,1,1,0,1];return`<div class="qr-box"><div class="qr-inner">${pat.map(p=>`<div class="qr-px" style="background:${p?'rgba(74,222,128,.8)':'transparent'}"></div>`).join('')}</div></div>`;}
-window.addEventListener('load',()=>{updateAll();});
+window.addEventListener('load',()=>{
+  const hasSavedConfig=loadPersistedConfig();
+  initDeploymentProfiles();
+  updateAll();
+  if(hasSavedConfig&&CONFIG.foodTokenAddr&&CONFIG.supplyChainAddr&&CONFIG.complianceAddr){
+    connectGanache(activeAccountIndex);
+  }
+});
 </script>
 </body>
 </html>
